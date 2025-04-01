@@ -1,5 +1,4 @@
-# Moquegua Morphology and AMS Radiocarbon Dating Analysis
-## Moquegua Valley Ancient Maize Analysis
+### Moquegua Valley Ancient Maize Analysis: Morphology and AMS Radiocarbon Dating
 
 ## Overview
 
