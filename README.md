@@ -1,7 +1,7 @@
 # Moquegua_Morphology
 ## Moquegua Valley Ancient Maize Analysis
 
-** Overview
+### Overview
 
 This repository contains the data and analysis for the morphological measurements and AMS radiocarbon dates of 340 archaeological maize specimens from the Moquegua Valley, Peru. The project aims to explore variation in maize cob morphology from the Middle Horizon period and generate visualizations to aid in statistical analysis.
 
