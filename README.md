@@ -17,7 +17,7 @@ This repository contains the data and analysis for the morphological measurement
 
 - `Morph_Stats.R` – R script for statistical analysis and visualization of morphological measurements.
 
-** Plots & Visualizations
+### Plots & Visualizations
 
 - `Boxplot_All_Traits.png` – Boxplot summarizing all measured traits.
 
