@@ -11,6 +11,8 @@ This repository contains the data and analysis for the morphological measurement
 - `cleaned_Ancient_Maize_Cob_Data_Sheet.csv` – Raw measurement data for the Middle Horizon maize specimens.
 
 - `cleaned_Ancient_Maize_Cob_Data_Sheet.xlsx` – Spreadsheet version of the raw measurement data.
+  
+- `Somerville_ChamberlainDec29_24.xls` - Spreadsheet with raw AMS radiocarbon data, calibrated dates, and Bayesian script for RMM43 6a.
 
 ### R Scripts
 
@@ -27,6 +29,12 @@ This repository contains the data and analysis for the morphological measurement
 - `Cluster_All_Traits_By_Site.png` – Clustering visualization of all traits by site.
 
 - `Pairwise_Traits_Games_Howell.png` – Pairwise comparison of traits using the Games-Howell test.
+  
+- `Moquegua_Maize_All_AMS.png` - Calibrated AMS radiocarbon dates for all MH specimens.
+  
+- `RMM43F_Table.png` - OxCal table to calculate Bayesian analysis for RMM43 6a.
+  
+- `RMM43F_Color.png` - Bayesian analysis of RMM43 6a.
 
 ### Project Files
 
