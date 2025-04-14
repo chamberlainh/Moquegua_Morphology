@@ -286,6 +286,67 @@ title("CDA for Significant Traits Across Sites")
 
 
 
+-------------------------------------------------------------------------
+  ## FOCUS on cob size, kernel over site
+
+  
+# Define the custom order
+site_order <- c("M73", "M103", "M7", "RM-07-M43", "RM-08-M43", 
+                "M10-11-Cemetery", "M10-11-Templete", "M1-95-Chen-Chen", 
+                "M12", "M11", "M44")
+
+# Set the factor levels for the Site column
+maize_data$Site <- factor(maize_data$Site, levels = site_order)
+
+
+
+
+# Define a function to assign time periods based on the Site
+maize_data$Time_Period <- case_when(
+  maize_data$Site %in% c("M73", "M103") ~ "LF",            # Late Formative
+  maize_data$Site == "M7" ~ "LF/MH",                       # Late Formative / Middle Horizon
+  maize_data$Site %in% c("M11", "M44") ~ "LIP",            # Late Intermediate Period
+  TRUE ~ "MH"                                              # Middle Horizon
+)
+
+# Boxplot for Length with Time Period as fill
+ggplot(maize_data, aes(x = Site, y = Length_mm, fill = Time_Period)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Distribution of Cob Length by Site and Time Period",
+       x = "Site",
+       y = "Length (mm)",
+       fill = "Time Period")
+
+
+# Boxplot for Weight with Time Period as fill
+ggplot(maize_data, aes(x = Site, y = Total_Wt_g, fill = Time_Period)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Distribution of Cob Weight by Site and Time Period",
+       x = "Site",
+       y = "Weight (g)",
+       fill = "Time Period")
+
+
+
+# Boxplot for Diameter_mm with Time Period as fill
+ggplot(maize_data, aes(x = Site, y = Diameter_mm, fill = Time_Period)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Distribution of Cob Diameter by Site and Time Period",
+       x = "Site",
+       y = "Diameter (mm)",
+       fill = "Time Period")
 
 
 
@@ -491,6 +552,9 @@ title("CDA for Significant Traits Across Time")
 
 # Load necessary libraries
 library(ggplot2)
+
+
+
 
 
 
