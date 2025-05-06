@@ -663,3 +663,191 @@ ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
         axis.text.x = element_text(angle = 45, hjust = 1))
 
 
+
+-------------------------------------------------------------------------
+  ## PCA
+  
+# By Site
+  # Step 1: Select and rename numeric columns (optional but cleaner)
+  morpho_wide <- maize_data %>%
+  select(Site,
+         Length = Length_mm,
+         Diameter = Diameter_mm,
+         CupuleNumber = Cupule_number,
+         CupuleWidth = `Mean_Cupule_Width(mm)`,
+         CupuleHeight = `Mean_cupule_height(mm)`,
+         KernelRows = Mean_kernel_row,
+         Weight = Total_Wt_g) %>%
+  drop_na()  # PCA can't handle NA values
+
+# Step 2: Run PCA on just the numeric columns
+morpho_pca <- prcomp(morpho_wide %>% select(-Site), scale. = TRUE)
+
+# Step 3: View PCA summary
+summary(morpho_pca)
+
+# Step 4: Create a scores data frame and add Site info back
+scores <- as.data.frame(morpho_pca$x)
+scores$Site <- morpho_wide$Site
+
+# Step 5 (optional): Plot the first two principal components
+library(ggplot2)
+
+ggplot(scores, aes(x = PC1, y = PC2, color = Site)) +
+  geom_point(size = 3, alpha = 0.8) +
+  theme_minimal() +
+  labs(title = "PCA of Ancient Maize Cob Morphology by Site",
+       x = paste0("PC1 (", round(summary(morpho_pca)$importance[2,1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(summary(morpho_pca)$importance[2,2]*100, 1), "%)"))
+
+
+
+# By Trait
+
+# Step 1: Select and rename numeric traits only
+trait_matrix <- maize_data %>%
+  select(Length = Length_mm,
+         Diameter = Diameter_mm,
+         CupuleNumber = Cupule_number,
+         CupuleWidth = `Mean_Cupule_Width(mm)`,
+         CupuleHeight = `Mean_cupule_height(mm)`,
+         KernelRows = Mean_kernel_row,
+         Weight = Total_Wt_g) %>%
+  drop_na()
+
+# Step 2: Transpose the data so traits are rows and cobs are columns
+trait_matrix_t <- t(trait_matrix)
+
+# Step 3: Run PCA (transpose makes traits the "observations")
+pca_traits <- prcomp(trait_matrix_t, scale. = TRUE)
+
+# Step 4: View PCA loadings (how traits relate to each PC)
+summary(pca_traits)
+pca_traits$rotation  # Shows how cobs contribute to each trait-PC
+
+# Step 5: Plot the traits in PC space
+library(ggplot2)
+
+trait_scores <- as.data.frame(pca_traits$x)
+trait_scores$Trait <- rownames(trait_scores)
+
+ggplot(trait_scores, aes(x = PC1, y = PC2, label = Trait)) +
+  geom_point(size = 4, color = "steelblue") +
+  geom_text(vjust = -0.8, size = 5) +
+  theme_minimal() +
+  labs(title = "PCA of Traits Across Maize Cobs",
+       x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"))
+
+
+
+# To view proportion of variance
+summary(pca_traits)
+
+
+
+
+
+## Focus on PC1 for Period
+# Step 1: Drop rows with NA in any trait and keep index
+complete_rows <- maize_data %>%
+  select(Length = Length_mm,
+         Diameter = Diameter_mm,
+         CupuleNumber = Cupule_number,
+         CupuleWidth = `Mean_Cupule_Width(mm)`,
+         CupuleHeight = `Mean_cupule_height(mm)`,
+         KernelRows = Mean_kernel_row,
+         Weight = Total_Wt_g) %>%
+  drop_na()
+
+# Step 2: Subset maize_data to match only complete rows
+# This assumes row order has not been altered!
+maize_metadata <- maize_data[complete.cases(
+  maize_data[, c("Length_mm", "Diameter_mm", "Cupule_number", 
+                 "Mean_Cupule_Width(mm)", "Mean_cupule_height(mm)", 
+                 "Mean_kernel_row", "Total_Wt_g")]
+), ]
+
+# Step 3: Run PCA
+pca_cobs <- prcomp(complete_rows, scale. = TRUE)
+
+# Step 4: Create score data frame and merge metadata
+pc_scores <- as.data.frame(pca_cobs$x)
+pc_scores$Period <- maize_metadata$Period
+pc_scores$Site <- maize_metadata$Site
+pc_scores$Sample_ID <- maize_metadata$Sample_ID
+
+# Step 5: Plot PC1 by Period
+library(ggplot2)
+
+
+# Relevel 'Period' to desired order: LF, LF/MH, LIP, MH
+pc_scores$Period <- factor(pc_scores$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
+
+# Now re-plot with the updated factor levels
+ggplot(pc_scores, aes(x = Period, y = PC1, fill = Period)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.4) +
+  labs(title = "PC1 (Cob Size) Across Time Periods",
+       y = "PC1 Score", x = "Period") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2")
+
+
+## Focus on PC1 for Site
+# Reorder Site levels
+pc_scores$Site <- factor(pc_scores$Site, levels = c(
+  "M73", "M103", "M7", "RM-07-M43", "RM-08-M43", 
+  "M10-11-Cemetery", "M10-11-Templete", "M1-95-Chen-Chen", 
+  "M12", "M11", "M44"
+))
+
+# Plot PC1 across Sites
+ggplot(pc_scores, aes(x = Site, y = PC1, fill = Period)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.4, size = 1.5) +
+  labs(title = "PC1 (Cob Size) Across Archaeological Sites",
+       x = "Site", y = "PC1 Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set2")
+
+
+# With sample size
+library(dplyr)
+library(ggplot2)
+
+# Count number of samples per site
+site_counts <- pc_scores %>%
+  group_by(Site) %>%
+  summarise(n = n())
+
+# Merge counts into main PC score data
+pc_scores_labeled <- pc_scores %>%
+  left_join(site_counts, by = "Site") %>%
+  mutate(Site_label = paste0(Site, "\n(n=", n, ")"))
+
+# Reorder Site_label using your preferred order
+site_order <- c("M73", "M103", "M7", "RM-07-M43", "RM-08-M43", 
+                "M10-11-Cemetery", "M10-11-Templete", "M1-95-Chen-Chen", 
+                "M12", "M11", "M44")
+
+# Match original Site order to the new Site_label
+pc_scores_labeled$Site_label <- factor(pc_scores_labeled$Site_label,
+                                       levels = pc_scores_labeled %>%
+                                         filter(Site %in% site_order) %>%
+                                         distinct(Site, Site_label) %>%
+                                         slice(match(site_order, Site)) %>%
+                                         pull(Site_label)
+)
+
+# Plot
+ggplot(pc_scores_labeled, aes(x = Site_label, y = PC1, fill = Period)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.4, size = 1.5) +
+  labs(title = "PC1 (Cob Size) Across Archaeological Sites",
+       x = "Site", y = "PC1 Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Set2")
+
