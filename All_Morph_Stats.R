@@ -851,3 +851,99 @@ ggplot(pc_scores_labeled, aes(x = Site_label, y = PC1, fill = Period)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_brewer(palette = "Set2")
 
+
+
+---------------------------------------------------------------------------
+# Chen chen v Omo style
+  # Define Chen Chen and Omo style groups
+  pc_scores_labeled <- pc_scores_labeled %>%
+  mutate(Style_Group = case_when(
+    Site %in% c("M1-95-Chen-Chen", "RM-07-M43", "RM-08-M43") ~ "Chen Chen",
+    Site == "M12" ~ "Omo",
+    TRUE ~ NA_character_
+  ))
+
+# Drop rows with NA in Style_Group
+pc_scores_grouped <- pc_scores_labeled %>%
+  filter(!is.na(Style_Group))
+
+
+library(ggplot2)
+library(dplyr)
+
+# QQ Plots for each group
+ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Style_Group) +
+  theme_minimal() +
+  labs(title = "QQ Plots for Chen Chen and Omo Style Groups")
+
+# Test for normality in each group
+shapiro_test <- pc_scores_grouped %>%
+  group_by(Style_Group) %>%
+  summarise(p_value = shapiro.test(PC1)$p.value)
+
+print(shapiro_test)
+
+# Wilcoxon rank-sum test
+wilcox_test_result <- wilcox.test(PC1 ~ Style_Group, data = pc_scores_grouped)
+
+print(wilcox_test_result)
+
+
+# The Wilcoxon rank-sum test result shows:
+
+#W = 613, which is the test statistic.
+
+#p-value = 0.3807, which is greater than 0.05.
+
+#Since the p-value is greater than 0.05, we fail to reject the null hypothesis, 
+#meaning there is no statistically significant difference in PC1 (cob size) 
+# scores between the Chen Chen style sites and the Omo style site.
+
+
+
+
+
+# Chen chen v Omo style v M10 Temple
+# Define Chen Chen, Omo, and Ritual Complex style groups
+pc_scores_labeled <- pc_scores_labeled %>%
+  mutate(Style_Group = case_when(
+    Site %in% c("M1-95-Chen-Chen", "RM-07-M43", "RM-08-M43") ~ "Chen Chen",
+    Site == "M12" ~ "Omo",
+    Site %in% c("M10-11-Cemetery", "M10-11-Templete") ~ "Ritual Complex",  # Add Ritual Complex group
+    TRUE ~ NA_character_
+  ))
+
+# Drop rows with NA in Style_Group
+pc_scores_grouped <- pc_scores_labeled %>%
+  filter(!is.na(Style_Group))
+
+library(ggplot2)
+library(dplyr)
+
+# QQ Plots for each group
+ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Style_Group) +
+  theme_minimal() +
+  labs(title = "QQ Plots for Chen Chen, Omo, and Ritual Complex Style Groups")
+
+# Test for normality in each group
+shapiro_test <- pc_scores_grouped %>%
+  group_by(Style_Group) %>%
+  summarise(p_value = shapiro.test(PC1)$p.value)
+
+print(shapiro_test)
+
+# Kruskal-Wallis test for non-normal data
+kruskal_test_result <- kruskal.test(PC1 ~ Style_Group, data = pc_scores_grouped)
+print(kruskal_test_result)
+
+# Pairwise Wilcoxon tests with p-value adjustment
+pairwise_wilcoxon <- pairwise.wilcox.test(pc_scores_grouped$PC1, pc_scores_grouped$Style_Group, p.adjust.method = "BH")
+print(pairwise_wilcoxon)
+
+# No sig difference between groups based on PC1
