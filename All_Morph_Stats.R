@@ -40,6 +40,7 @@ levene_test <- leveneTest(Value ~ Trait, data = morphology_long)
 
 # Run post hoc Tukey's test if ANOVA is significant
 tukey_results <- TukeyHSD(anova_model)
+list(tukey_results)
 
 # Print results
 list(ANOVA = anova_summary, LeveneTest = levene_test, TukeyHSD = tukey_results)
@@ -115,8 +116,112 @@ univariate_results
 
 
 
+# MH SITES ONLY
+library(dplyr)
+
+# Filter data for Middle Horizon only
+mh_data <- maize_data %>%
+  filter(Period == "MH")
+
+# Make sure 'Site' is a factor
+mh_data$Site <- as.factor(mh_data$Site)
+
+# Define morphological traits (adjust names if needed)
+traits <- c(
+  "Length_mm",
+  "Diameter_mm",
+  "Cupule_number",
+  "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)",
+  "Mean_kernel_row",
+  "Total_Wt_g"
+)
+
+# Subset data to keep Site and traits
+morph_data_mh <- mh_data %>%
+  select(Site, all_of(traits))
+
+# Create matrix of numeric traits
+morph_matrix_mh <- as.matrix(morph_data_mh[, traits])
+
+# Fit MANOVA: traits ~ Site (within MH period)
+manova_model_mh <- manova(morph_matrix_mh ~ Site, data = morph_data_mh)
+
+# Summarize MANOVA results using Pillai's trace
+manova_summary_mh <- summary(manova_model_mh, test = "Pillai")
+print(manova_summary_mh)
+
+# Look at univariate ANOVA results for each trait
+univariate_results_mh <- summary.aov(manova_model_mh)
+print(univariate_results_mh)
 
 
+# Load package for Tukey's HSD if not already
+if (!require(multcomp)) install.packages("multcomp")
+library(multcomp)
+
+# For each significant trait, run ANOVA and then Tukey HSD post-hoc test
+
+significant_traits <- c("Cupule_number", "Mean_Cupule_Width(mm)", "Mean_kernel_row")
+
+posthoc_results <- list()
+
+# for (trait in significant_traits) {
+  # Fit an ANOVA model with Site as factor
+  # formula_str <- as.formula(paste(trait, "~ Site"))
+  # anova_model <- aov(formula_str, data = morph_data_mh)
+  
+  for(trait in traits){
+    formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+    anova_model <- aov(formula_str, data = morph_data_mh)
+    tukey_res <- TukeyHSD(anova_model)
+    posthoc_results[[trait]] <- summary(tukey_res)
+  }
+
+
+# Print post-hoc test results
+posthoc_results
+
+for (trait in traits) {
+  cat("\nPost-hoc results for trait:", trait, "\n")
+  print(posthoc_results[[trait]])
+}
+
+
+
+# TRAITS AMONG MH SITES
+# Filter data for MH sites only
+mh_sites <- c("M1-95-Chen-Chen", "M10-11-Cemetery", "M10-11-Templete", "M12", "RM-07-M43", "RM-08-M43")
+maize_data_mh <- subset(maize_data, Site %in% mh_sites)
+
+
+traits <- c("Length_mm", "Diameter_mm", "Cupule_number", "Mean_Cupule_Width(mm)", 
+            "Mean_cupule_height(mm)", "Mean_kernel_row", "Total_Wt_g")
+
+for (trait in traits) {
+  # Wrap trait with backticks in formula to handle special characters
+  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+  aov_model <- aov(formula_str, data = maize_data_mh)
+  tukey_res <- TukeyHSD(aov_model)
+  posthoc_results_mh[[trait]] <- tukey_res
+}
+
+# Print results
+for (trait in traits) {
+  cat("\nPost-hoc results for trait:", trait, "\n")
+  print(posthoc_results_mh[[trait]])
+}
+
+
+
+
+
+
+
+
+
+
+# ALL SITES
 # Post-Hoc test to look at length, diameter, cupule number, 
 # cupule width, cupule height, mean kernel row, weight
 
@@ -422,6 +527,50 @@ TukeyHSD(aov_kernel)
 # Example for Total_Wt_g
 aov_weight <- aov(Total_Wt_g ~ Period, data = maize_data)
 TukeyHSD(aov_weight)
+
+
+
+
+
+# BETWEEN TIME PERIODS
+
+# install.packages("emmeans")
+library(emmeans)
+
+# Get estimated marginal means for Period
+pairwise_results <- emmeans(manova_model, ~ Period)
+
+# Late Formative (LF) to Middle Horizon (MH)
+contrast_LF_MH <- contrast(pairwise_results, 
+                           method = "trt.vs.ctrl", 
+                           ref = "LF")  # LF is the reference
+print(contrast_LF_MH)
+
+# Within Middle Horizon period — since you have MH and LF/MH (transitional)
+# You can test pairwise differences including LF/MH and MH
+contrast_within_MH <- contrast(pairwise_results, 
+                               method = "pairwise", 
+                               adjust = "BH")
+print(contrast_within_MH)
+
+# Focus on MH related groups only
+mh_periods <- c("LF", "LF/MH", "MH")
+
+pairwise_mh <- emmeans(manova_model, pairwise ~ Period, 
+                       adjust = "BH")$contrasts %>%
+  as.data.frame() %>%
+  filter(contrast %in% c("LF - (LF/MH)", "(LF/MH) - MH", "LF - MH"))
+
+print(pairwise_mh)
+
+# Middle Horizon (MH) to Late Intermediate Period (LIP)
+contrast_MH_LIP <- contrast(pairwise_results, 
+                            method = "trt.vs.ctrl", 
+                            ref = "MH")  # MH is the reference
+print(contrast_MH_LIP)
+
+
+
 
 
 
