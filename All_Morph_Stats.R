@@ -881,7 +881,7 @@ trait_scores <- as.data.frame(pca_traits$x)
 trait_scores$Trait <- rownames(trait_scores)
 
 ggplot(trait_scores, aes(x = PC1, y = PC2, label = Trait)) +
-  geom_point(size = 4, color = "steelblue") +
+  geom_point(size = 4, color = "virdis") +
   geom_text(vjust = -0.8, size = 5) +
   theme_minimal() +
   labs(title = "PCA of Traits Across Maize Cobs",
@@ -889,6 +889,46 @@ ggplot(trait_scores, aes(x = PC1, y = PC2, label = Trait)) +
        y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"))
 
 
+# IMPROVED PCA for TRAITS
+# Step 1: Select and rename numeric traits only
+trait_matrix <- maize_data %>%
+  select(Length = Length_mm,
+         Diameter = Diameter_mm,
+         CupuleNumber = Cupule_number,
+         CupuleWidth = `Mean_Cupule_Width(mm)`,
+         CupuleHeight = `Mean_cupule_height(mm)`,
+         KernelRows = Mean_kernel_row,
+         Weight = Total_Wt_g) %>%
+  drop_na()
+
+# Step 2: Transpose the data so traits are rows and cobs are columns
+trait_matrix_t <- t(trait_matrix)
+
+# Step 3: Run PCA (transpose makes traits the "observations")
+pca_traits <- prcomp(trait_matrix_t, scale. = TRUE)
+
+# Step 4: View PCA loadings (how traits relate to each PC)
+summary(pca_traits)
+pca_traits$rotation  # Shows how cobs contribute to each trait-PC
+
+# Step 5: Plot the traits in PC space with distinct colors for each trait
+library(ggplot2)
+
+trait_scores <- as.data.frame(pca_traits$x)
+trait_scores$Trait <- rownames(trait_scores)
+
+
+ggplot(trait_scores, aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = Trait), size = 4) +
+  scale_color_viridis_d() +
+  geom_text(aes(label = Trait), vjust = -0.8, size = 5) +
+  
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  labs(title = "PCA of Traits Across Maize Cobs",
+       x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
+       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)")
+)
 
 # To view proportion of variance
 summary(pca_traits)
