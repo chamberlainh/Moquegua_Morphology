@@ -22,6 +22,7 @@ morphology_data <- maize_data %>%
          "Mean_cupule_height(mm)",
          Mean_kernel_row, Total_Wt_g)
 
+
 # Reshape the data into long format
 morphology_long <- morphology_data %>%
   pivot_longer(cols = -Site, names_to = "Trait", values_to = "Value")
@@ -456,7 +457,9 @@ ggplot(maize_data, aes(x = Site, y = Diameter_mm, fill = Time_Period)) +
 
 
 -------------------------------------------------------------------------
-  ## MANOVA for general differences across time periods
+## MANOVA for general differences across time periods
+library(dplyr)
+
   
 # Make sure 'Period' is a factor
 maize_data$Period <- as.factor(maize_data$Period)
@@ -474,8 +477,11 @@ traits <- c(
 )
 
 # 5. Subset the data to keep only Site and these traits
+
 morph_data <- maize_data %>%
-  select(Period, all_of(traits))
+  dplyr::select(Period, all_of(traits))
+
+
 
 # 6. Create a matrix of just the numeric traits
 morph_matrix <- as.matrix(morph_data[, traits])
@@ -569,6 +575,9 @@ contrast_MH_LIP <- contrast(pairwise_results,
                             ref = "MH")  # MH is the reference
 print(contrast_MH_LIP)
 
+
+
+pairwise_results
 
 
 
@@ -814,23 +823,28 @@ ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
 
 
 -------------------------------------------------------------------------
-  ## PCA
-  
+## PCA
+library(dplyr)
+
 # By Site
   # Step 1: Select and rename numeric columns (optional but cleaner)
+
   morpho_wide <- maize_data %>%
-  select(Site,
-         Length = Length_mm,
-         Diameter = Diameter_mm,
-         CupuleNumber = Cupule_number,
-         CupuleWidth = `Mean_Cupule_Width(mm)`,
-         CupuleHeight = `Mean_cupule_height(mm)`,
-         KernelRows = Mean_kernel_row,
-         Weight = Total_Wt_g) %>%
-  drop_na()  # PCA can't handle NA values
+    dplyr::select(Site,
+                  Length = Length_mm,
+                  Diameter = Diameter_mm,
+                  CupuleNumber = Cupule_number,
+                  CupuleWidth = `Mean_Cupule_Width(mm)`,
+                  CupuleHeight = `Mean_cupule_height(mm)`,
+                  KernelRows = Mean_kernel_row,
+                  Weight = Total_Wt_g) %>%
+    drop_na()  # PCA can't handle NA values
+  
 
 # Step 2: Run PCA on just the numeric columns
 morpho_pca <- prcomp(morpho_wide %>% select(-Site), scale. = TRUE)
+morpho_pca <- prcomp(dplyr::select(morpho_wide, -Site), scale. = TRUE)
+
 
 # Step 3: View PCA summary
 summary(morpho_pca)
