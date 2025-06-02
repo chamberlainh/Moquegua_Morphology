@@ -1,13 +1,23 @@
-## ANOVA for ALL Morphology
+## Stats for ALL Morphology Traits
 
--------------------------------------------------------------------------
-  # install.packages("readxl")
-  
-  # Load required libraries
-library(readr)     # for read_csv
+
+
+
+# Install Packages --------------------------------------------------------
+#install.packages("viridis")
+
+# Load required libraries
+library(readr) # for read_csv
 library(dplyr)     # for data wrangling
 library(tidyr)     # for pivot_longer
 library(car)       # for leveneTest (homogeneity of variance)
+library(ggplot2)
+library(ggpubr)
+library(rstatix)
+library(emmeans)
+library(candisc)
+library(viridis)
+
 
 # Define file path
 
@@ -15,6 +25,11 @@ file_data <- "Merged_Ancient_Maize_Cob_Data_Sheet.csv"
 
 # Read the CSV into a data frame
 maize_data <- read_csv(file_data)
+
+
+
+# General Morph Stats -----------------------------------------------------
+
 
 # Select only numeric morphological measurements + Site
 morphology_data <- maize_data %>%
@@ -54,7 +69,7 @@ list(ANOVA = anova_summary, LeveneTest = levene_test, TukeyHSD = tukey_results)
 oneway.test(Value ~ Trait, data = morphology_long, var.equal = FALSE)
 
 #install.packages("rstatix")
-library(rstatix)
+
 
 # Run Games-Howell test
 games_howell_test(morphology_long, Value ~ Trait)
@@ -62,8 +77,6 @@ games_howell_test(morphology_long, Value ~ Trait)
 print(games_howell_test(morphology_long, Value ~ Trait), n = Inf)
 
 
-
-library(ggplot2)
 ggplot(morphology_long, aes(x = Trait, y = Value, fill = Trait)) +
   geom_boxplot(alpha = 0.7) +
   theme_bw() +
@@ -74,8 +87,8 @@ ggplot(morphology_long, aes(x = Trait, y = Value, fill = Trait)) +
 
 
 
--------------------------------------------------------------------------
-## MANOVA for general differences across sites
+# MANOVA for general differences across sites -----------------------------
+
   
 # Make sure 'Site' is a factor
 maize_data$Site <- as.factor(maize_data$Site)
@@ -116,9 +129,8 @@ univariate_results
 
 
 
+# # MH SITES ONLY ---------------------------------------------------------
 
-# MH SITES ONLY
-library(dplyr)
 
 # Filter data for Middle Horizon only
 mh_data <- maize_data %>%
@@ -217,15 +229,7 @@ for (trait in traits) {
 
 
 
-
-
-
-
-
-# ALL SITES
-# Post-Hoc test to look at length, diameter, cupule number, 
-# cupule width, cupule height, mean kernel row, weight
-
+# ALL SITES Post-Hoc test ALL TRAITS --------------------------------------
 
 # Example for Length_mm
 aov_length <- aov(Length_mm ~ Site, data = maize_data)
@@ -259,11 +263,8 @@ TukeyHSD(aov_weight)
 
 
 
-
 # Plot this
-
-library(ggplot2)
-library(ggpubr)  # for stat_compare_means
+  # for stat_compare_means
 
 # Cob Length
 ggplot(maize_data, aes(x = Site, y = Length_mm)) +
@@ -304,8 +305,6 @@ ggplot(maize_data, aes(x = Site, y = `Mean_cupule_height(mm)`)) +
 # cupule surface area
 maize_data$Surface_Area <- maize_data$`Mean_Cupule_Width(mm)` * maize_data$`Mean_cupule_height(mm)`
 
-library(ggplot2)
-library(ggpubr)  # for stat_compare_means
 
 # Surface Area by Site
 ggplot(maize_data, aes(x = Site, y = Surface_Area)) +
@@ -315,13 +314,6 @@ ggplot(maize_data, aes(x = Site, y = Surface_Area)) +
   ggtitle("Cupule Surface Area (mm^2) by Site") +
   ylab("Surface Area (mm²)")
 
-
-
-
-
-library(dplyr)
-library(ggplot2)
-library(ggpubr)
 
 # Calculate counts per site
 site_counts <- maize_data %>%
@@ -362,10 +354,13 @@ ggplot(maize_data, aes(x = Site, y = Total_Wt_g)) +
 
 
 
+
+# Plot CDA ----------------------------------------------------------------
+
+
 # Kind of like a PCA
-# Load required package
-# install.packages("candisc") # Uncomment if not yet installed
-library(candisc)
+
+
 
 # Fit MANOVA model with all traits
 manova_model <- manova(cbind(
@@ -392,8 +387,9 @@ title("CDA for Significant Traits Across Sites")
 
 
 
--------------------------------------------------------------------------
-  ## FOCUS on cob size, kernel over site
+
+
+# FOCUS on cob size, kernel over site ------------------------------------
 
   
 # Define the custom order
@@ -456,9 +452,8 @@ ggplot(maize_data, aes(x = Site, y = Diameter_mm, fill = Time_Period)) +
 
 
 
--------------------------------------------------------------------------
-## MANOVA for general differences across time periods
-library(dplyr)
+
+# MANOVA for general differences across time periods ----------------------
 
   
 # Make sure 'Period' is a factor
@@ -537,11 +532,8 @@ TukeyHSD(aov_weight)
 
 
 
+# Between Time Periods ----------------------------------------------------
 
-# BETWEEN TIME PERIODS
-
-# install.packages("emmeans")
-library(emmeans)
 
 # Get estimated marginal means for Period
 pairwise_results <- emmeans(manova_model, ~ Period)
@@ -577,19 +569,14 @@ print(contrast_MH_LIP)
 
 
 
-pairwise_results
 
 
 
 
+# Focus on Cupule_number, Mean_Cupule_Width(mm), Mean_cupule_heigh --------
 
 
-
-# Focus on Cupule_number, Mean_Cupule_Width(mm), 
-# Mean_cupule_height(mm), and Diameter_mm
 # Plot this
-
-library(ggplot2)
 
 # For Cupule_number
 ggplot(maize_data, aes(x = Period, y = Cupule_number)) +
@@ -653,10 +640,9 @@ ggplot(maize_data, aes(x = Period, y = Diameter_mm)) +
 
 
 
-# Kind of like a PCA
-# Load required package
-# install.packages("candisc") # Uncomment if not yet installed
-library(candisc)
+
+# CDA Plot ----------------------------------------------------------------
+
 
 # Fit MANOVA model with all traits
 manova_model <- manova(cbind(
@@ -698,22 +684,10 @@ title("CDA for Significant Traits Across Time")
 
 
 
+# Look into change over time w Individual Traits --------------------------
 
-
-
-
--------------------------------------------------------------------------
-# Look into change over time
 
 ## FOCUS ON LENGTH
-
-
-# Load necessary libraries
-library(ggplot2)
-
-
-
-
 
 
 # Reorder the 'Period' factor levels
@@ -762,8 +736,6 @@ ggplot(maize_data, aes(x = Period, y = Diameter_mm, fill = Period)) +
 # FOCUS ON WEIGHT
 
 
-library(ggplot2)
-
 ggplot(maize_data, aes(x = Period, y = Total_Wt_g, fill = Period)) +
   geom_violin(trim = FALSE, alpha = 0.6, color = NA) +
   geom_boxplot(width = 0.1, outlier.shape = NA, color = "black", fill = "white") +
@@ -782,11 +754,6 @@ ggplot(maize_data, aes(x = Period, y = Total_Wt_g, fill = Period)) +
 
 
 # FOCUS ON CUPULE CHARACTERISTICS
-
-# Load required libraries
-library(ggplot2)
-library(dplyr)
-library(tidyr)
 
 # Reorder Period levels
 maize_data$Period <- factor(maize_data$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
@@ -822,27 +789,25 @@ ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
 
 
 
--------------------------------------------------------------------------
-## PCA
-library(dplyr)
+
+# PCA ---------------------------------------------------------------------
+
 
 # By Site
-  # Step 1: Select and rename numeric columns (optional but cleaner)
-
-  morpho_wide <- maize_data %>%
-    dplyr::select(Site,
-                  Length = Length_mm,
-                  Diameter = Diameter_mm,
-                  CupuleNumber = Cupule_number,
-                  CupuleWidth = `Mean_Cupule_Width(mm)`,
-                  CupuleHeight = `Mean_cupule_height(mm)`,
-                  KernelRows = Mean_kernel_row,
-                  Weight = Total_Wt_g) %>%
+#Step 1: Select and rename numeric columns (optional but cleaner)
+morpho_wide <- maize_data %>%
+  dplyr::select(Site,
+                Length = Length_mm,
+                Diameter = Diameter_mm,
+                CupuleNumber = Cupule_number,
+                CupuleWidth = `Mean_Cupule_Width(mm)`,
+                CupuleHeight = `Mean_cupule_height(mm)`,
+                KernelRows = Mean_kernel_row,
+                Weight = Total_Wt_g) %>%
     drop_na()  # PCA can't handle NA values
   
 
 # Step 2: Run PCA on just the numeric columns
-morpho_pca <- prcomp(morpho_wide %>% select(-Site), scale. = TRUE)
 morpho_pca <- prcomp(dplyr::select(morpho_wide, -Site), scale. = TRUE)
 
 
@@ -854,7 +819,6 @@ scores <- as.data.frame(morpho_pca$x)
 scores$Site <- morpho_wide$Site
 
 # Step 5 (optional): Plot the first two principal components
-library(ggplot2)
 
 ggplot(scores, aes(x = PC1, y = PC2, color = Site)) +
   geom_point(size = 3, alpha = 0.8) +
@@ -869,7 +833,7 @@ ggplot(scores, aes(x = PC1, y = PC2, color = Site)) +
 
 # Step 1: Select and rename numeric traits only
 trait_matrix <- maize_data %>%
-  select(Length = Length_mm,
+  dplyr::select(Length = Length_mm,
          Diameter = Diameter_mm,
          CupuleNumber = Cupule_number,
          CupuleWidth = `Mean_Cupule_Width(mm)`,
@@ -889,24 +853,26 @@ summary(pca_traits)
 pca_traits$rotation  # Shows how cobs contribute to each trait-PC
 
 # Step 5: Plot the traits in PC space
-library(ggplot2)
 
 trait_scores <- as.data.frame(pca_traits$x)
 trait_scores$Trait <- rownames(trait_scores)
 
-ggplot(trait_scores, aes(x = PC1, y = PC2, label = Trait)) +
-  geom_point(size = 4, color = "virdis") +
+
+ggplot(trait_scores, aes(x = PC1, y = PC2, label = Trait, color = Trait)) +
+  geom_point(size = 4) +
   geom_text(vjust = -0.8, size = 5) +
+  scale_color_viridis_d() +   # discrete viridis colors
   theme_minimal() +
   labs(title = "PCA of Traits Across Maize Cobs",
        x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
-       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"))
+       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"),
+       color = "Trait")  # legend title
 
 
 # IMPROVED PCA for TRAITS
 # Step 1: Select and rename numeric traits only
 trait_matrix <- maize_data %>%
-  select(Length = Length_mm,
+  dplyr::select(Length = Length_mm,
          Diameter = Diameter_mm,
          CupuleNumber = Cupule_number,
          CupuleWidth = `Mean_Cupule_Width(mm)`,
@@ -926,7 +892,6 @@ summary(pca_traits)
 pca_traits$rotation  # Shows how cobs contribute to each trait-PC
 
 # Step 5: Plot the traits in PC space with distinct colors for each trait
-library(ggplot2)
 
 trait_scores <- as.data.frame(pca_traits$x)
 trait_scores$Trait <- rownames(trait_scores)
@@ -951,10 +916,11 @@ summary(pca_traits)
 
 
 
-## Focus on PC1 for Period
+# PCA for PC1 Period ------------------------------------------------------
+
 # Step 1: Drop rows with NA in any trait and keep index
 complete_rows <- maize_data %>%
-  select(Length = Length_mm,
+  dplyr::select(Length = Length_mm,
          Diameter = Diameter_mm,
          CupuleNumber = Cupule_number,
          CupuleWidth = `Mean_Cupule_Width(mm)`,
@@ -981,21 +947,31 @@ pc_scores$Site <- maize_metadata$Site
 pc_scores$Sample_ID <- maize_metadata$Sample_ID
 
 # Step 5: Plot PC1 by Period
-library(ggplot2)
-
 
 # Relevel 'Period' to desired order: LF, LF/MH, LIP, MH
 pc_scores$Period <- factor(pc_scores$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
 
 # Now re-plot with the updated factor levels
+
 ggplot(pc_scores, aes(x = Period, y = PC1, fill = Period)) +
-  geom_boxplot() +
-  scale_color_viridis_d() +
-  geom_jitter(width = 0.2, alpha = 0.4) +
+  geom_boxplot(outlier.color = NA) +       # boxplots with no outlier points
+  geom_jitter(width = 0.2, alpha = 0.4, color = "black") +  # black jitter points
   labs(title = "PC1 (Cob Size) Across Time Periods",
        y = "PC1 Score", x = "Period") +
-  theme_minimal() + 
+  theme_minimal() +
   theme(panel.grid = element_blank())
+
+ggplot(pc_scores, aes(x = Period, y = PC1, fill = Period)) +
+  geom_boxplot(outlier.color = NA) +       
+  geom_jitter(width = 0.2, alpha = 0.4, color = "black") +  
+  labs(title = "PC1 (Cob Size) Across Time Periods",
+       y = "PC1 Score", x = "Period") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.95, 0.95),
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha('white', 0.6), color = NA))
+
 
 
 ## Focus on PC1 for Site
@@ -1017,9 +993,9 @@ ggplot(pc_scores, aes(x = Site, y = PC1, fill = Period)) +
   scale_fill_brewer(palette = "Set2")
 
 
+
+
 # With sample size
-library(dplyr)
-library(ggplot2)
 
 # Count number of samples per site
 site_counts <- pc_scores %>%
@@ -1057,8 +1033,12 @@ ggplot(pc_scores_labeled, aes(x = Site_label, y = PC1, fill = Period)) +
 
 
 
----------------------------------------------------------------------------
-# Chen chen v Omo style
+
+
+
+# Chen chen v Omo style ---------------------------------------------------
+
+
   # Define Chen Chen and Omo style groups
   pc_scores_labeled <- pc_scores_labeled %>%
   mutate(Style_Group = case_when(
@@ -1124,8 +1104,6 @@ pc_scores_labeled <- pc_scores_labeled %>%
 pc_scores_grouped <- pc_scores_labeled %>%
   filter(!is.na(Style_Group))
 
-library(ggplot2)
-library(dplyr)
 
 # QQ Plots for each group
 ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
