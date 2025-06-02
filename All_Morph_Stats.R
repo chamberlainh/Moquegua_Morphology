@@ -976,11 +976,12 @@ pc_scores$Period <- factor(pc_scores$Period, levels = c("LF", "LF/MH", "MH", "LI
 # Now re-plot with the updated factor levels
 ggplot(pc_scores, aes(x = Period, y = PC1, fill = Period)) +
   geom_boxplot() +
+  scale_color_viridis_d() +
   geom_jitter(width = 0.2, alpha = 0.4) +
   labs(title = "PC1 (Cob Size) Across Time Periods",
        y = "PC1 Score", x = "Period") +
-  theme_minimal() +
-  scale_fill_brewer(palette = "Set2")
+  theme_minimal() + 
+  theme(panel.grid = element_blank())
 
 
 ## Focus on PC1 for Site
