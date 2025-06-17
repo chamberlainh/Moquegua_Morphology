@@ -570,10 +570,57 @@ print(contrast_MH_LIP)
 
 
 
+# Linear Regression across Period DOESNT WORK  --------
+# Ensure Period is a factor (you've already done this)
+maize_data$Period <- as.factor(maize_data$Period)
+
+# Define traits of interest
+traits <- c(
+  "Length_mm",
+  "Diameter_mm",
+  "Cupule_number",
+  "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)",
+  "Mean_kernel_row",
+  "Total_Wt_g"
+)
+
+traits <- c(
+  "Length_mm",
+  "Diameter_mm",
+  "Cupule_number",
+  "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)",
+  "Mean_kernel_row",
+  "Total_Wt_g"
+)
+lm_results$Length_mm
+
+
+# Run linear regression for each trait
+lm_results <- lapply(traits, function(trait) {
+  formula <- as.formula(paste(trait, "~ Period"))
+  model <- lm(formula, data = maize_data)
+  summary(model)
+})
+names(lm_results) <- traits  # Label each result by trait
+
+trait_pvals <- sapply(lm_results, function(model_summary) {
+  anova(model_summary)$`Pr(>F)`[1]  # p-value for Period
+})
+
+# Order from most to least significant
+trait_pvals[order(trait_pvals)]
 
 
 
-# Focus on Cupule_number, Mean_Cupule_Width(mm), Mean_cupule_heigh --------
+
+
+
+
+
+
+# Focus on Cupule_number, Mean_Cupule_Width(mm), Mean_cupule_height --------
 
 
 # Plot this
@@ -753,14 +800,14 @@ ggplot(maize_data, aes(x = Period, y = Total_Wt_g, fill = Period)) +
 
 
 
-# FOCUS ON CUPULE CHARACTERISTICS
+# FOCUS ON CUPULE CHARACTERISTICS ---------------------------------------------------------------------
 
 # Reorder Period levels
 maize_data$Period <- factor(maize_data$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
 
 # Select and pivot the relevant columns
 maize_long <- maize_data %>%
-  select(Period, 
+  dplyr::select(Period, 
          Cupule_number,
          `Mean_Cupule_Width(mm)`,
          `Mean_cupule_height(mm)`,
@@ -774,7 +821,7 @@ maize_long$Trait <- recode(maize_long$Trait,
                            "Cupule_number" = "Cupule Number",
                            "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
                            "Mean_cupule_height(mm)" = "Cupule Height (mm)",
-                           "Mean_kernel_row" = "Kernel Rows")
+                           "Kernel_row_number" = "Kernel Rows")
 
 # Make faceted boxplots
 ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
@@ -786,6 +833,328 @@ ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
   theme_minimal() +
   theme(strip.text = element_text(size = 12, face = "bold"),
         axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
+# CREATE FACETED BOXPLOTS FOR ALL RAW TRAITS OVER TIME
+#install.packages("ggpubr")
+library(ggpubr)
+library(tidyr)
+
+
+# Reorder Period levels
+maize_data$Period <- factor(maize_data$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
+
+# Select and pivot the relevant columns
+maize_long <- maize_data %>%
+  dplyr::select(Period, 
+                Cupule_number,
+                `Mean_Cupule_Width(mm)`,
+                `Mean_cupule_height(mm)`,
+                Mean_kernel_row,
+                Length_mm,
+                Diameter_mm,
+                Total_Wt_g) %>%
+  pivot_longer(cols = -Period,
+               names_to = "Trait",
+               values_to = "Value")
+
+# Optional: Clean trait labels for prettier plotting3
+maize_long$Trait <- as.character(maize_long$Trait)
+maize_long$Trait <- dplyr::recode(maize_long$Trait,
+                                  "Cupule_number" = "Cupule Number",
+                                  "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+                                  "Mean_cupule_height(mm)" = "Cupule Height (mm)",
+                                  "Mean_kernel_row" = "Kernel Rows",
+                                  "Length_mm" = "Length (mm)",
+                                  "Diameter_mm" = "Diameter (mm)",
+                                  "Total_Wt_g" = "Total Weight (g)"
+)
+
+
+# Reorder Trait levels for plotting
+maize_long$Trait <- factor(maize_long$Trait, levels = c(
+  "Length (mm)",
+  "Diameter (mm)",
+  "Total Weight (g)",
+  "Kernel Rows",
+  "Cupule Number",
+  "Cupule Width (mm)",
+  "Cupule Height (mm)"
+))
+
+
+
+period_colors <- c(
+  "LF" = "#fc8d62",       # greenish
+  "LF/MH" = "#66c2a5",   # orangish
+  "MH" = "#8da0cb",      # bluish
+  "LIP" = "#e78ac3"      # pinkish
+)
+
+scale_fill_manual(values = period_colors)
+
+
+# Make faceted boxplots
+ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.5, color = "black") +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_fill_manual(values = period_colors) +
+  stat_compare_means(method = "anova", label = "p.format") +  # Global ANOVA p-value per facet
+  labs(x = "Time Period", y = "Value", title = "Distribution of Morphological Traits Over Time") +
+  theme_minimal() +
+  theme(panel.grid = element_blank()) +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.4, 0.2),
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha('white', 0.6), color = NA))
+
+
+
+
+# Linear Regression ---------------------------------------------------------------------
+
+
+maize_data$Period_numeric <- dplyr::recode(maize_data$Period,
+                                           "LF" = 1,
+                                           "LF/MH" = 2,
+                                           "MH" = 3,
+                                           "LIP" = 4
+)
+
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+maize_long <- maize_data %>%
+  dplyr::select(Period_numeric, all_of(traits)) %>%
+  pivot_longer(cols = -Period_numeric, names_to = "Trait", values_to = "Value")
+
+maize_long$Trait <- dplyr::recode(maize_long$Trait,
+                                  "Cupule_number" = "Cupule Number",
+                                  "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+                                  "Mean_cupule_height(mm)" = "Cupule Height (mm)",
+                                  "Mean_kernel_row" = "Kernel Rows",
+                                  "Length_mm" = "Length (mm)",
+                                  "Diameter_mm" = "Diameter (mm)",
+                                  "Total_Wt_g" = "Total Weight (g)")
+
+
+#maize_long$Trait <- recode(maize_long$Trait,
+#                           "Cupule_number" = "Cupule Number",
+#                           "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+#                           "Mean_cupule_height(mm)" = "Cupule Height (mm)",
+#                           "Mean_kernel_row" = "Kernel Rows",
+#                           "Length_mm" = "Length (mm)",
+#                           "Diameter_mm" = "Diameter (mm)",
+#                           "Total_Wt_g" = "Total Weight (g)"
+#)
+
+
+
+#maize_long$Trait <- factor(maize_long$Trait, levels = c(
+#  "Length (mm)",
+#  "Diameter (mm)",
+#  "Total Weight (g)",
+#  "Kernel Rows",
+#  "Cupule Number",
+#  "Cupule Width (mm)",
+#  "Cupule Height (mm)"
+#))
+
+
+ggplot(maize_long, aes(x = Period_numeric, y = Value)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  stat_cor(method = "pearson", label.x = 1, label.y.npc = "bottom", size = 3) +
+  stat_regline_equation(label.y.npc = "top", size = 3) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  labs(
+    x = "Chronological Period (numeric)",
+    y = "Trait Value",
+    title = "Linear Regression of Morphological Traits Over Time"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 12, face = "bold"),
+    panel.grid = element_blank()
+  )
+
+# Updated Axis ---------------------------------------------------------------------
+
+# Reshape the data
+maize_long <- maize_data %>%
+  dplyr::select(Period, Period_numeric,
+         Length_mm,
+         Diameter_mm,
+         Total_Wt_g,
+         Mean_kernel_row,
+         Cupule_number,
+         `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`) %>%
+  pivot_longer(cols = -c(Period, Period_numeric),
+               names_to = "Trait",
+               values_to = "Value")
+
+# Recode Trait labels for display
+maize_long$Trait <- dplyr::recode(maize_long$Trait,
+                                  "Length_mm" = "Length (mm)",
+                                  "Diameter_mm" = "Diameter (mm)",
+                                  "Total_Wt_g" = "Total Weight (g)",
+                                  "Mean_kernel_row" = "Kernel Rows",
+                                  "Cupule_number" = "Cupule Number",
+                                  "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+                                  "Mean_cupule_height(mm)" = "Cupule Height (mm)"
+)
+
+# Reorder facets
+#maize_long$Trait <- factor(maize_long$Trait, levels = c(
+#  "Length (mm)",
+#  "Diameter (mm)",
+#  "Total Weight (g)",
+#  "Kernel Rows",
+#  "Cupule Number",
+#  "Cupule Width (mm)",
+#  "Cupule Height (mm)"
+#))
+
+
+ggplot(maize_long, aes(x = Period_numeric, y = Value)) +
+  geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_color_manual(values = period_colors) +
+  scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
+  labs(x = "Time Period", y = "Trait Value",
+       title = "Linear Regression of Morphological Traits Across Time Periods") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.4, 0.2),
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha('white', 0.6), color = NA))
+
+library(ggpubr)
+
+# ggplot(maize_long, aes(x = Period_numeric, y = Value)) +
+#  geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
+#  geom_smooth(method = "lm", se = TRUE, color = "black") +
+#  stat_regline_equation(
+#    aes(label =  paste(..eq.label.., ..p.label.., sep = "~~~")),
+#    label.x.npc = "left", label.y.npc = 0.95,
+#    size = 3,
+#    color = "black"
+#  ) +
+#  facet_wrap(~ Trait, scales = "free_y") +
+#  scale_color_manual(values = period_colors) +
+#  scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
+#  labs(x = "Time Period", y = "Trait Value",
+#       title = "Linear Regression of Morphological Traits Across Time Periods") +
+#  theme_minimal() +
+#  theme(strip.text = element_text(size = 12, face = "bold"),
+#        axis.text.x = element_text(angle = 45, hjust = 1)) +
+#  theme(panel.grid = element_blank(),
+#        legend.position = c(0.4, 0.2),
+#        legend.justification = c("right", "top"),
+#        legend.background = element_rect(fill = alpha('white', 0.6), color = NA))
+
+# ADD P Values
+#install.packages("ggpmisc")
+library(ggpmisc)
+
+ggplot(maize_long, aes(x = Period_numeric, y = Value)) +
+  geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  stat_poly_eq(
+    aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
+    formula = y ~ x, 
+    parse = TRUE,
+    label.x.npc = "center",
+    label.y.npc = 1.0,
+    size = 4
+  ) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_color_manual(values = period_colors) +
+  scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
+  labs(x = "Time Period", y = "Trait Value",
+       title = "Linear Regression of Morphological Traits Across Time Periods") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(panel.grid = element_blank(),
+        legend.position = c(0.4, 0.2),
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha('white', 0.6), color = NA))
+
+
+
+
+# Linear w 2 plots ---------------------------------------------------------------------
+
+# Create a list of traits to filter
+cob_traits <- c("Length (mm)", "Diameter (mm)", "Total Weight (g)")
+cupule_traits <- c("Kernel Rows", "Cupule Number", "Cupule Width (mm)", "Cupule Height (mm)")
+
+# Plot 1: Cob Dimensions --------------------------------------------------
+ggplot(filter(maize_long, Trait %in% cob_traits),
+       aes(x = Period_numeric, y = Value)) +
+  geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  stat_poly_eq(
+    aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
+    formula = y ~ x, parse = TRUE,
+    label.x.npc = "center", label.y.npc = 1.0, size = 4
+  ) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_color_manual(values = period_colors) +
+  scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
+  labs(
+    x = "Time Period", y = "Trait Value",
+    title = "Linear Regression of Cob Dimensions Across Time Periods"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 12, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank(),
+    #legend.position = c(0.9, 0.9),
+    #legend.justification = c("right", "top"),
+    #legend.background = element_rect(fill = alpha('white', 0.6), color = NA)
+  )
+
+# Plot 2: Cupule Characteristics ------------------------------------------
+ggplot(filter(maize_long, Trait %in% cupule_traits),
+       aes(x = Period_numeric, y = Value)) +
+  geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  stat_poly_eq(
+    aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
+    formula = y ~ x, parse = TRUE,
+    label.x.npc = "center", label.y.npc = 1.0, size = 4
+  ) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_color_manual(values = period_colors) +
+  scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
+  labs(
+    x = "Time Period", y = "Trait Value",
+    title = "Linear Regression of Cupule Characteristics Across Time Periods"
+  ) +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 12, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank(),
+    #legend.position = c(0.4, 0.2),
+    #legend.justification = c("right", "top"),
+    #legend.background = element_rect(fill = alpha('white', 0.6), color = NA)
+  )
+
 
 
 
