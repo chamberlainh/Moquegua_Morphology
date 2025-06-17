@@ -122,10 +122,28 @@ manova_model <- manova(morph_matrix ~ Site, data = morph_data)
 manova_summary <- summary(manova_model, test = "Pillai")
 print(manova_summary)
 
+# ANALYSIS INDICATES ALL TRAITS EXCEPT WEIGHT SIGNIFICIANT
+
+
 
 # 9. Look at univariate ANOVAs for each trait (part of the MANOVA output)
 univariate_results <- summary.aov(manova_model)
 univariate_results
+
+
+## Noticed in CDA M73 (cupule number) and M12 (cob dimensions) seem unique
+maize_data$Site <- as.factor(maize_data$Site)
+mod_cupule <- aov(Cupule_number ~ Site, data = maize_data)
+tukey_cupule <- TukeyHSD(mod_cupule)
+
+# View M73 comparisons
+tukey_cupule$Site[grep("M73", rownames(tukey_cupule$Site)), ]
+mod_weight <- aov(Total_Wt_g ~ Site, data = maize_data)
+tukey_weight <- TukeyHSD(mod_weight)
+
+# View M12 comparisons
+tukey_weight$Site[grep("M12", rownames(tukey_weight$Site)), ]
+
 
 
 
@@ -152,7 +170,7 @@ traits <- c(
 
 # Subset data to keep Site and traits
 morph_data_mh <- mh_data %>%
-  select(Site, all_of(traits))
+  dplyr::select(Site, all_of(traits))
 
 # Create matrix of numeric traits
 morph_matrix_mh <- as.matrix(morph_data_mh[, traits])
@@ -352,6 +370,87 @@ ggplot(maize_data, aes(x = Site, y = Total_Wt_g)) +
 
 
 
+
+# Look at M7 for LF/MH Wari transition ----------------------------------------------------------------
+
+maize_data <- maize_data %>%
+  filter(Site != "M44") %>%  # Exclude M44
+  mutate(
+    Cultural_Period = case_when(
+      Site %in% c("M73", "M103") ~ "Early_Huaracane",
+      Site == "M7" ~ "Transitional_Wari",
+      TRUE ~ "Later_Tiwanaku"
+    )
+  )
+
+
+# Ensure all traits are numeric and clean
+traits <- c(
+  "Length_mm",
+  "Diameter_mm",
+  "Cupule_number",
+  "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)",
+  "Mean_kernel_row",
+  "Total_Wt_g"
+)
+
+morph_data <- maize_data %>%
+  dplyr::select(Cultural_Period, all_of(traits)) %>%
+  filter(complete.cases(.))  # Remove rows with NA
+
+# MANOVA model
+manova_model <- manova(as.matrix(morph_data[, traits]) ~ Cultural_Period, data = morph_data)
+
+# Summary
+summary(manova_model, test = "Wilks")
+
+
+results <- lapply(traits, function(trait) {
+  formula <- as.formula(paste0("`", trait, "` ~ Cultural_Period"))
+  aov_model <- aov(formula, data = morph_data)
+  summary(aov_model)
+})
+names(results) <- traits
+
+results
+
+tukey_tests <- lapply(traits, function(trait) {
+  model <- aov(as.formula(paste0("`", trait, "` ~ Cultural_Period")), data = morph_data)
+  TukeyHSD(model)
+})
+names(tukey_tests) <- traits
+
+# Example: Cupule number comparison
+tukey_tests$Cupule_number$Cultural_Period[grep("Transitional_Wari", rownames(tukey_tests$Cupule_number$Cultural_Period)), ]
+
+# Plot
+ggplot(morph_data, aes(x = Cultural_Period, y = Cupule_number, fill = Cultural_Period)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Cupule Number by Cultural Period")
+
+# ALL TRAITS for Wari
+
+m7_tukey_results <- lapply(traits, function(trait) {
+  model <- aov(as.formula(paste0("`", trait, "` ~ Cultural_Period")), data = morph_data)
+  tukey <- TukeyHSD(model)
+  df <- as.data.frame(tukey$Cultural_Period)
+  df$Comparison <- rownames(df)
+  df$Trait <- trait
+  df %>% filter(grepl("Transitional_Wari", Comparison))
+})
+
+# Combine all results into one data frame
+m7_all <- do.call(rbind, m7_tukey_results)
+
+# Optional: tidy the column order
+m7_all <- m7_all %>%
+  dplyr::select(Trait, Comparison, diff, lwr, upr, `p adj`) %>%
+  arrange(Trait)
+
+# View it
+View(m7_all)  # or just print(m7_all) for console
 
 
 
