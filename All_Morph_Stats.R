@@ -131,6 +131,61 @@ univariate_results <- summary.aov(manova_model)
 univariate_results
 
 
+# SAVE general trait results
+install.packages("rstatix")
+install.packages("broom")
+install.packages("writexl")
+
+library(rstatix)
+library(broom)
+library(writexl)
+
+# Welch's ANOVA
+welch_anova <- oneway.test(Value ~ Trait, data = morphology_long, var.equal = FALSE)
+welch_df <- data.frame(
+  Df = welch_anova$parameter[1],
+  F = welch_anova$statistic,
+  p_value = welch_anova$p.value,
+  Method = "Welch's ANOVA"
+)
+
+# Games-Howell test
+games_df <- morphology_long %>%
+  games_howell_test(Value ~ Trait)
+
+# MANOVA summary
+# Extract the test results (coefficients) from the MANOVA summary
+manova_df <- as.data.frame(manova_summary$stats)
+
+# Rename columns for clarity
+colnames(manova_df) <- c("Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")
+
+# Add rownames as a column if you want to retain "Cultural_Period", etc.
+manova_df$Effect <- rownames(manova_df)
+
+# Univariate ANOVAs
+univariate_list <- summary.aov(manova_model)
+# Convert each univariate result to a tidy table and combine
+univariate_df <- do.call(rbind, lapply(names(univariate_list), function(trait) {
+  broom::tidy(univariate_list[[trait]]) %>%
+    mutate(Trait = trait)
+}))
+
+write_xlsx(
+  list(
+    "Welch_ANOVA" = welch_df,
+    "Games_Howell" = games_df,
+    "MANOVA_Pillai" = manova_df,
+    "Univariate_ANOVAs" = univariate_df
+  ),
+  path = "Supplementary_Morphology_Stats.xlsx"
+)
+
+
+
+# M73 and M12 from CDA -----------------------------
+
+
 ## Noticed in CDA M73 (cupule number) and M12 (cob dimensions) seem unique
 maize_data$Site <- as.factor(maize_data$Site)
 mod_cupule <- aov(Cupule_number ~ Site, data = maize_data)
@@ -220,30 +275,28 @@ for (trait in traits) {
 
 
 
-# TRAITS AMONG MH SITES
+# TRAITS AMONG MH SITES DOESN'T WORK WELL
 # Filter data for MH sites only
-mh_sites <- c("M1-95-Chen-Chen", "M10-11-Cemetery", "M10-11-Templete", "M12", "RM-07-M43", "RM-08-M43")
-maize_data_mh <- subset(maize_data, Site %in% mh_sites)
+#mh_sites <- c("M1-95-Chen-Chen", "M10-11-Cemetery", "M10-11-Templete", "M12", "RM-07-M43", "RM-08-M43")
+#maize_data_mh <- subset(maize_data, Site %in% mh_sites)
 
 
-traits <- c("Length_mm", "Diameter_mm", "Cupule_number", "Mean_Cupule_Width(mm)", 
+#traits <- c("Length_mm", "Diameter_mm", "Cupule_number", "Mean_Cupule_Width(mm)", 
             "Mean_cupule_height(mm)", "Mean_kernel_row", "Total_Wt_g")
 
-for (trait in traits) {
+#for (trait in traits) {
   # Wrap trait with backticks in formula to handle special characters
-  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
-  aov_model <- aov(formula_str, data = maize_data_mh)
-  tukey_res <- TukeyHSD(aov_model)
-  posthoc_results_mh[[trait]] <- tukey_res
-}
+#  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+#  aov_model <- aov(formula_str, data = maize_data_mh)
+#  tukey_res <- TukeyHSD(aov_model)
+#  posthoc_results_mh[[trait]] <- tukey_res
+#}
 
 # Print results
-for (trait in traits) {
-  cat("\nPost-hoc results for trait:", trait, "\n")
-  print(posthoc_results_mh[[trait]])
-}
-
-
+#for (trait in traits) {
+#  cat("\nPost-hoc results for trait:", trait, "\n")
+#  print(posthoc_results_mh[[trait]])
+#}
 
 
 
@@ -277,6 +330,72 @@ TukeyHSD(aov_kernel)
 aov_weight <- aov(Total_Wt_g ~ Site, data = maize_data)
 TukeyHSD(aov_weight)
 
+
+
+# SAVE AS A SPREADSHEET
+# Make MANOVA df for MH
+manova_df_mh <- as.data.frame(manova_summary_mh$stats)
+colnames(manova_df_mh) <- c("Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")
+manova_df_mh$Effect <- rownames(manova_df_mh)
+manova_df_mh <- manova_df_mh[, c("Effect", "Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")]
+
+# Make univariate ANOVA df for MH
+univariate_df_mh <- do.call(rbind, lapply(names(univariate_results_mh), function(trait) {
+  broom::tidy(univariate_results_mh[[trait]]) %>%
+    mutate(Trait = trait)
+}))
+
+# Make Tukey from ANOVA df for MH
+
+posthoc_results <- list()
+
+for (trait in traits) {
+  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+  anova_model <- aov(formula_str, data = morph_data_mh)
+  tukey_res <- TukeyHSD(anova_model)
+  posthoc_results[[trait]] <- tukey_res  # store raw Tukey result
+}
+
+tukey_mh_df <- do.call(rbind, lapply(names(posthoc_results), function(trait) {
+  # Extract just the site comparison table
+  tukey_result <- posthoc_results[[trait]]$Site
+  df <- as.data.frame(tukey_result)
+  df$Comparison <- rownames(tukey_result)
+  df$Trait <- trait
+  df
+})) %>%
+  dplyr::select(Trait, Comparison, diff, lwr, upr, `p adj`)
+
+
+# Make Tukey for All Traits df for MH
+traits <- c(
+  "Length_mm", "Diameter_mm", "Cupule_number", "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)", "Mean_kernel_row", "Total_Wt_g"
+)
+
+# Run ANOVA and TukeyHSD for all traits across all sites
+tukey_all_sites <- lapply(traits, function(trait) {
+  aov_model <- aov(as.formula(paste0("`", trait, "` ~ Site")), data = maize_data)
+  tukey_result <- TukeyHSD(aov_model)$Site
+  df <- as.data.frame(tukey_result)
+  df$Comparison <- rownames(tukey_result)
+  df$Trait <- trait
+  df
+})
+
+# Combine all
+tukey_all_df <- do.call(rbind, tukey_all_sites) %>%
+  dplyr::select(Trait, Comparison, diff, lwr, upr, `p adj`)
+
+write_xlsx(
+  list(
+    "MANOVA_MH" = manova_df_mh,
+    "ANOVA_MH" = univariate_df_mh,
+    "TukeyHSD_MH" = tukey_mh_df,
+    "TukeyHSD_AllSites" = tukey_all_df
+  ),
+  path = "Supplementary_MH_Traits_with_AllSites.xlsx"
+)
 
 
 
