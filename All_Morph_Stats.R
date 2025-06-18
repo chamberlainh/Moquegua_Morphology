@@ -17,6 +17,10 @@ library(rstatix)
 library(emmeans)
 library(candisc)
 library(viridis)
+library(rstatix)
+library(broom)
+library(writexl)
+
 
 
 # Define file path
@@ -132,13 +136,6 @@ univariate_results
 
 
 # SAVE general trait results
-install.packages("rstatix")
-install.packages("broom")
-install.packages("writexl")
-
-library(rstatix)
-library(broom)
-library(writexl)
 
 # Welch's ANOVA
 welch_anova <- oneway.test(Value ~ Trait, data = morphology_long, var.equal = FALSE)
@@ -585,10 +582,6 @@ write_xlsx(
 # Plot CDA ----------------------------------------------------------------
 
 
-# Kind of like a PCA
-
-
-
 # Fit MANOVA model with all traits
 manova_model <- manova(cbind(
   Length_mm,
@@ -638,18 +631,23 @@ outlier_row <- scores[which.min(scores$Can2), ]
 print(outlier_row)
 
 
-# Plot canonical variates
-plot(cda)
-title("CDA for Significant Traits Across Sites (No Weight)")
+# Plot canonical variates with custom axis limits
+plot(cda,
+     main = "CDA for Significant Traits Across Sites (No Weight)",
+     xlim = c(-8, 14),
+     ylim = c(-8, 8)
+)
 
-# Add legend manually
-legend("topright",
-       legend = site_levels,
-       col = site_colors,
-       pch = site_pchs,
-       title = "Site",
-       cex = 0.9)
-
+# Add legend
+legend(
+  "bottomright",
+  legend = levels(maize_data_no_outlier$Site),
+  pch = 1:length(levels(maize_data_no_outlier$Site)),
+  col = 1:length(levels(maize_data_no_outlier$Site)),
+  title = "Site", 
+  cex = 0.6, 
+  bty = "n"
+)
 
 
 # Check M12 and M73 again
