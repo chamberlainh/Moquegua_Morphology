@@ -540,14 +540,16 @@ tukey_tests <- lapply(traits, function(trait) {
 })
 names(tukey_tests) <- traits
 
+
+
 # Example: Cupule number comparison
-tukey_tests$Cupule_number$Cultural_Period[grep("Transitional_Wari", rownames(tukey_tests$Cupule_number$Cultural_Period)), ]
+#tukey_tests$Cupule_number$Cultural_Period[grep("Transitional_Wari", rownames(tukey_tests$Cupule_number$Cultural_Period)), ]
 
 # Plot
-ggplot(morph_data, aes(x = Cultural_Period, y = Cupule_number, fill = Cultural_Period)) +
-  geom_boxplot() +
-  theme_minimal() +
-  labs(title = "Cupule Number by Cultural Period")
+# ggplot(morph_data, aes(x = Cultural_Period, y = Cupule_number, fill = Cultural_Period)) +
+#  geom_boxplot() +
+#  theme_minimal() +
+#  labs(title = "Cupule Number by Cultural Period")
 
 # ALL TRAITS for Wari
 
@@ -571,6 +573,13 @@ m7_all <- m7_all %>%
 # View it
 View(m7_all)  # or just print(m7_all) for console
 
+# SAVE
+write_xlsx(
+  list(
+    "TukeyHSD_M7_Transition" = m7_all
+  ),
+  path = "TukeyHSD_M7_Transition.xlsx"
+)
 
 
 # Plot CDA ----------------------------------------------------------------
@@ -602,7 +611,92 @@ plot(cda)
 title("CDA for Significant Traits Across Sites")
 
 
+# TRY WITHOUT WEIGHT BC Not Stat Sig
 
+# Fit MANOVA model with all traits
+maize_data_no_outlier <- maize_data[-185, ]
+
+
+manova_model <- manova(cbind(
+  Length_mm,
+  Diameter_mm,
+  Cupule_number,
+  `Mean_Cupule_Width(mm)`,
+  `Mean_cupule_height(mm)`,
+  Mean_kernel_row
+) ~ Site, data = maize_data_no_outlier)
+
+# Canonical Discriminant Analysis
+cda <- candisc(manova_model)
+
+# View canonical scores (for plotting, etc.)
+head(cda$scores)
+summary(scores$Can2)
+
+# Where is the M10 outlier?
+outlier_row <- scores[which.min(scores$Can2), ]
+print(outlier_row)
+
+
+# Plot canonical variates
+plot(cda)
+title("CDA for Significant Traits Across Sites (No Weight)")
+
+# Add legend manually
+legend("topright",
+       legend = site_levels,
+       col = site_colors,
+       pch = site_pchs,
+       title = "Site",
+       cex = 0.9)
+
+
+
+# Check M12 and M73 again
+
+# M73 and M12 from CDA -----------------------------
+
+
+## Noticed in CDA M73 (cupule number) and M12 (cob dimensions) seem unique
+maize_data$Site <- as.factor(maize_data$Site)
+mod_cupule <- aov(Cupule_number ~ Site, data = maize_data)
+tukey_cupule <- TukeyHSD(mod_cupule)
+
+# View M73 comparisons SIG
+tukey_cupule$Site[grep("M73", rownames(tukey_cupule$Site)), ]
+
+# M12 NOT SIG
+mod_KRN <- aov(Mean_kernel_row ~ Site, data = maize_data)
+tukey_KRN <- TukeyHSD(mod_KRN)
+
+tukey_KRN$Site[grep("M12", rownames(tukey_KRN$Site)), ]
+
+
+# SAVE
+
+# Extract M73 from cupule number Tukey results
+m73_cupule_df <- as.data.frame(tukey_cupule$Site)
+m73_cupule_df$Comparison <- rownames(tukey_cupule$Site)
+m73_cupule_df <- m73_cupule_df[grep("M73", m73_cupule_df$Comparison), ]
+m73_cupule_df$Trait <- "Cupule_number"
+
+# Extract M12 from kernel row number Tukey results
+m12_krn_df <- as.data.frame(tukey_KRN$Site)
+m12_krn_df$Comparison <- rownames(tukey_KRN$Site)
+m12_krn_df <- m12_krn_df[grep("M12", m12_krn_df$Comparison), ]
+m12_krn_df$Trait <- "Mean_kernel_row"
+
+cda_traits_df <- rbind(m73_cupule_df, m12_krn_df)
+
+# Optional: clean column order
+cda_traits_df <- cda_traits_df[, c("Trait", "Comparison", "diff", "lwr", "upr", "p adj")]
+
+write_xlsx(
+  list(
+    "CDA_M12_M73_Traits" = cda_traits_df
+  ),
+  path = "CDA_M12_M73_Traits.xlsx"
+)
 
 
 
