@@ -157,7 +157,7 @@ manova_df <- as.data.frame(manova_summary$stats)
 # Rename columns for clarity
 colnames(manova_df) <- c("Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")
 
-# Add rownames as a column if you want to retain "Cultural_Period", etc.
+# Add rownames as a column
 manova_df$Effect <- rownames(manova_df)
 
 # Univariate ANOVAs
@@ -599,9 +599,24 @@ cda <- candisc(manova_model)
 # View canonical scores (for plotting, etc.)
 head(cda$scores)
 
-# Plot canonical variates
-plot(cda)
-title("CDA for Significant Traits Across Sites")
+
+# Plot canonical variates with custom axis limits
+plot(cda,
+     main = "CDA for Traits Across Sites",
+     xlim = c(-8, 14),
+     ylim = c(-8, 8),
+     cex = 0.3  # Smaller text for trait labels
+)
+
+# Add legend
+legend(x = 15, y = 0,  # Adjust these values based on your plot
+       legend = levels(maize_data_no_outlier$Site),
+       pch = 1:length(levels(maize_data_no_outlier$Site)),
+       col = 1:length(levels(maize_data_no_outlier$Site)),
+       title = "Site", 
+       cex = 0.7, 
+       bty = "n")
+
 
 
 # TRY WITHOUT WEIGHT BC Not Stat Sig
