@@ -377,6 +377,115 @@ write_xlsx(
 
 
 
+
+# Plot MH Traits Across Sites NEED TO FIX
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+
+# Step 1: Clean mh_long with consistent trait names
+# Define recode lookup as a named vector
+trait_lookup <- c(
+  "Cupule_number" = "Cupule Number",
+  "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+  "Mean_cupule_height(mm)" = "Cupule Height (mm)",
+  "Mean_kernel_row" = "Kernel Rows",
+  "Length_mm" = "Length (mm)",
+  "Diameter_mm" = "Diameter (mm)",
+  "Total_Wt_g" = "Total Weight (g)"
+)
+
+# Apply to mh_long
+mh_long <- mh_data %>%
+  dplyr::select(Site, all_of(traits)) %>%
+  pivot_longer(cols = -Site, names_to = "Trait", values_to = "Value") %>%
+  mutate(
+    Site = as.factor(Site),
+    Trait = trait_lookup[Trait]  # safer recoding via named vector
+  )
+
+# Apply to tukey results
+pval_df <- tukey_mh_df %>%
+  separate(Comparison, into = c("group1", "group2"), sep = "-") %>%
+  rename(p = `p adj`) %>%
+  mutate(Trait = trait_lookup[Trait]) %>%
+  left_join(
+    mh_long %>%
+      group_by(Trait) %>%
+      summarise(y.position = max(Value, na.rm = TRUE) * 1.1),
+    by = "Trait"
+  )
+
+# Step 2: Prepare p-value dataframe for stat_pvalue_manual
+# Also recode trait names to match plot facets
+pval_df <- tukey_mh_df %>%
+  separate(Comparison, into = c("group1", "group2"), sep = "-") %>%
+  rename(p = `p adj`) %>%
+  mutate(
+    Trait = recode(Trait,
+                   "Cupule_number" = "Cupule Number",
+                   "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
+                   "Mean_cupule_height(mm)" = "Cupule Height (mm)",
+                   "Mean_kernel_row" = "Kernel Rows",
+                   "Length_mm" = "Length (mm)",
+                   "Diameter_mm" = "Diameter (mm)",
+                   "Total_Wt_g" = "Total Weight (g)"
+    )
+  ) %>%
+  left_join(
+    mh_long %>%
+      group_by(Trait) %>%
+      summarise(y.position = max(Value, na.rm = TRUE) * 1.1),
+    by = "Trait"
+  )
+
+# Step 3: Plot with p-values
+ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
+  facet_wrap(~ Trait, scales = "free_y") +
+  stat_pvalue_manual(
+    data = pval_df,
+    label = "p",
+    y.position = "y.position",
+    xmin = "group1",
+    xmax = "group2"
+  ) +
+  labs(
+    title = "Morphological Trait Differences Across MH Sites",
+    x = "Site", y = "Trait Value"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    panel.grid = element_blank(),
+    legend.position = "none"
+  )
+
+
+ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
+  facet_wrap(~ Trait, scales = "free_y") +
+  labs(
+    title = "Morphological Trait Variation Across MH Sites",
+    x = "Site",
+    y = "Trait Value"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    panel.grid = element_blank(),
+    legend.position = "none"
+  )
+
+
+
+
 # Plot this
   # for stat_compare_means
 
@@ -867,12 +976,30 @@ pairwise_mh <- emmeans(manova_model, pairwise ~ Period,
 
 print(pairwise_mh)
 
-# Middle Horizon (MH) to Late Intermediate Period (LIP)
-contrast_MH_LIP <- contrast(pairwise_results, 
-                            method = "trt.vs.ctrl", 
-                            ref = "MH")  # MH is the reference
-print(contrast_MH_LIP)
 
+# Focus on LIP related groups only
+# Get estimated marginal means for Period
+pairwise_results <- emmeans(manova_model, ~ Period)
+
+# Late Formative (LF) to Middle Horizon (MH)
+contrast_LIP <- contrast(pairwise_results, 
+                           method = "trt.vs.ctrl", 
+                           ref = "LIP")  # LIP is the reference
+print(contrast_LIP)
+
+# Save
+lf_mh_df <- as.data.frame(contrast_LF_MH)
+within_mh_df <- as.data.frame(contrast_within_MH)
+lip_contrast_df <- as.data.frame(contrast_LIP)
+
+write_xlsx(
+  list(
+    "LF_vs_MH" = lf_mh_df,
+    "Within_MH" = within_mh_df,
+    "LIP_vs_Others" = lip_contrast_df
+  ),
+  path = "Supplmentary_Period_Contrasts.xlsx"
+)
 
 
 
@@ -1412,10 +1539,11 @@ ggplot(filter(maize_long, Trait %in% cob_traits),
        aes(x = Period_numeric, y = Value)) +
   geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  geom_blank(aes(y = Value * 1.15)) +
   stat_poly_eq(
     aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
     formula = y ~ x, parse = TRUE,
-    label.x.npc = "center", label.y.npc = 1.0, size = 4
+    label.x.npc = "center", label.y.npc = 1.0, size = 3
   ) +
   facet_wrap(~ Trait, scales = "free_y") +
   scale_color_manual(values = period_colors) +
@@ -1439,10 +1567,11 @@ ggplot(filter(maize_long, Trait %in% cupule_traits),
        aes(x = Period_numeric, y = Value)) +
   geom_point(aes(color = Period), position = position_jitter(width = 0.1), alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  geom_blank(aes(y = Value * 1.15)) +
   stat_poly_eq(
     aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
     formula = y ~ x, parse = TRUE,
-    label.x.npc = "center", label.y.npc = 1.0, size = 4
+    label.x.npc = "center", label.y.npc = 1.0, size = 3
   ) +
   facet_wrap(~ Trait, scales = "free_y") +
   scale_color_manual(values = period_colors) +
@@ -1455,14 +1584,12 @@ ggplot(filter(maize_long, Trait %in% cupule_traits),
   theme(
     strip.text = element_text(size = 12, face = "bold"),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid = element_blank(),
-    #legend.position = c(0.4, 0.2),
-    #legend.justification = c("right", "top"),
-    #legend.background = element_rect(fill = alpha('white', 0.6), color = NA)
+    panel.grid = element_blank()
   )
 
 
 
+  
 
 
 # PCA ---------------------------------------------------------------------
