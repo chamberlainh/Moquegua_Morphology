@@ -4,7 +4,7 @@
 
 
 # Install Packages --------------------------------------------------------
-#install.packages("viridis")
+
 
 # Load required libraries
 library(readr) # for read_csv
@@ -20,6 +20,7 @@ library(viridis)
 library(rstatix)
 library(broom)
 library(writexl)
+library(RColorBrewer)
 
 
 
@@ -71,8 +72,6 @@ list(ANOVA = anova_summary, LeveneTest = levene_test, TukeyHSD = tukey_results)
 
 # Welch's ANOVA for unequal variance
 oneway.test(Value ~ Trait, data = morphology_long, var.equal = FALSE)
-
-#install.packages("rstatix")
 
 
 # Run Games-Howell test
@@ -245,7 +244,7 @@ library(multcomp)
 
 # For each significant trait, run ANOVA and then Tukey HSD post-hoc test
 
-significant_traits <- c("Cupule_number", "Mean_Cupule_Width(mm)", "Mean_kernel_row")
+significant_traits <- c("Cupule_number", "Mean_Cupule_Width(mm)", "Mean_kernel_row", "Mean_cupule_height(mm)")
 
 posthoc_results <- list()
 
@@ -263,37 +262,28 @@ posthoc_results <- list()
 
 
 # Print post-hoc test results
-posthoc_results
+# Calculate and store Tukey HSD post-hoc tests
+posthoc_results <- list()
 
-for (trait in traits) {
+for (trait in significant_traits) {
   cat("\nPost-hoc results for trait:", trait, "\n")
-  print(posthoc_results[[trait]])
+  
+  # Use backticks around variable names to handle special characters
+  formula_str <- paste0("`", trait, "` ~ Site")
+  aov_model <- aov(as.formula(formula_str), data = morph_data_mh)
+  
+  # Tukey HSD
+  tukey <- TukeyHSD(aov_model)
+  
+  # Store result
+  posthoc_results[[trait]] <- tukey
+  
+  # Print result
+  print(tukey)
 }
 
 
 
-# TRAITS AMONG MH SITES DOESN'T WORK WELL
-# Filter data for MH sites only
-#mh_sites <- c("M1-95-Chen-Chen", "M10-11-Cemetery", "M10-11-Templete", "M12", "RM-07-M43", "RM-08-M43")
-#maize_data_mh <- subset(maize_data, Site %in% mh_sites)
-
-
-#traits <- c("Length_mm", "Diameter_mm", "Cupule_number", "Mean_Cupule_Width(mm)", 
-            "Mean_cupule_height(mm)", "Mean_kernel_row", "Total_Wt_g")
-
-#for (trait in traits) {
-  # Wrap trait with backticks in formula to handle special characters
-#  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
-#  aov_model <- aov(formula_str, data = maize_data_mh)
-#  tukey_res <- TukeyHSD(aov_model)
-#  posthoc_results_mh[[trait]] <- tukey_res
-#}
-
-# Print results
-#for (trait in traits) {
-#  cat("\nPost-hoc results for trait:", trait, "\n")
-#  print(posthoc_results_mh[[trait]])
-#}
 
 
 
@@ -370,15 +360,6 @@ traits <- c(
   "Mean_cupule_height(mm)", "Mean_kernel_row", "Total_Wt_g"
 )
 
-# Run ANOVA and TukeyHSD for all traits across all sites
-tukey_all_sites <- lapply(traits, function(trait) {
-  aov_model <- aov(as.formula(paste0("`", trait, "` ~ Site")), data = maize_data)
-  tukey_result <- TukeyHSD(aov_model)$Site
-  df <- as.data.frame(tukey_result)
-  df$Comparison <- rownames(tukey_result)
-  df$Trait <- trait
-  df
-})
 
 # Combine all
 tukey_all_df <- do.call(rbind, tukey_all_sites) %>%
@@ -388,8 +369,7 @@ write_xlsx(
   list(
     "MANOVA_MH" = manova_df_mh,
     "ANOVA_MH" = univariate_df_mh,
-    "TukeyHSD_MH" = tukey_mh_df,
-    "TukeyHSD_AllSites" = tukey_all_df
+    "TukeyHSD_MH" = tukey_mh_df
   ),
   path = "Supplementary_MH_Traits_with_AllSites.xlsx"
 )
@@ -712,6 +692,7 @@ write_xlsx(
 )
 
 
+# OLD BOXPLOTS  ------------------------------------
 
 
 # FOCUS on cob size, kernel over site ------------------------------------
@@ -1591,17 +1572,20 @@ trait_scores <- as.data.frame(pca_traits$x)
 trait_scores$Trait <- rownames(trait_scores)
 
 
+# UPDATE FOR COLOR SCHEME 
+
 ggplot(trait_scores, aes(x = PC1, y = PC2)) +
   geom_point(aes(color = Trait), size = 4) +
-  scale_color_viridis_d() +
+  scale_color_manual(values = c(
+    "#FFB3BA", "#FFDFBA", "#A6E3E9", "#BAFFC9", "#BAE1FF", "#D5BAFF", "#FFCCE5"
+  )) +
   geom_text(aes(label = Trait), vjust = -0.8, size = 5) +
-  
   theme_minimal() +
   theme(panel.grid = element_blank()) +
-  labs(title = "PCA of Traits Across Maize Cobs",
+  labs(title = "PCA of All Traits Across All Sites",
        x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
-       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)")
-)
+       y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"))
+
 
 # To view proportion of variance
 summary(pca_traits)
@@ -1671,10 +1655,12 @@ ggplot(pc_scores, aes(x = Period, y = PC1, fill = Period)) +
 ## Focus on PC1 for Site
 # Reorder Site levels
 pc_scores$Site <- factor(pc_scores$Site, levels = c(
-  "M73", "M103", "M7", "RM-07-M43", "RM-08-M43", 
-  "M10-11-Cemetery", "M10-11-Templete", "M1-95-Chen-Chen", 
+  "M73", "M103", "M7", "M43", "M43", 
+  "M10", "M10", "M1", 
   "M12", "M11", "M44"
 ))
+
+
 
 # Plot PC1 across Sites
 ggplot(pc_scores, aes(x = Site, y = PC1, fill = Period)) +
@@ -1702,8 +1688,8 @@ pc_scores_labeled <- pc_scores %>%
   mutate(Site_label = paste0(Site, "\n(n=", n, ")"))
 
 # Reorder Site_label using your preferred order
-site_order <- c("M73", "M103", "M7", "RM-07-M43", "RM-08-M43", 
-                "M10-11-Cemetery", "M10-11-Templete", "M1-95-Chen-Chen", 
+site_order <- c("M73", "M103", "M7", "M43", "M43", 
+                "M10", "M10", "M1", 
                 "M12", "M11", "M44")
 
 # Match original Site order to the new Site_label
@@ -1733,21 +1719,18 @@ ggplot(pc_scores_labeled, aes(x = Site_label, y = PC1, fill = Period)) +
 # Chen chen v Omo style ---------------------------------------------------
 
 
-  # Define Chen Chen and Omo style groups
-  pc_scores_labeled <- pc_scores_labeled %>%
-  mutate(Style_Group = case_when(
-    Site %in% c("M1-95-Chen-Chen", "RM-07-M43", "RM-08-M43") ~ "Chen Chen",
-    Site == "M12" ~ "Omo",
-    TRUE ~ NA_character_
+# Define Chen Chen and Omo style groups
+pc_scores_labeled <- pc_scores_labeled %>%
+mutate(Style_Group = case_when(
+  Site %in% c("M1", "M43", "M43") ~ "Chen Chen",
+  Site == "M12" ~ "Omo",
+  TRUE ~ NA_character_
   ))
 
 # Drop rows with NA in Style_Group
 pc_scores_grouped <- pc_scores_labeled %>%
   filter(!is.na(Style_Group))
 
-
-library(ggplot2)
-library(dplyr)
 
 # QQ Plots for each group
 ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
@@ -1757,12 +1740,12 @@ ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
   theme_minimal() +
   labs(title = "QQ Plots for Chen Chen and Omo Style Groups")
 
-# Test for normality in each group
-shapiro_test <- pc_scores_grouped %>%
-  group_by(Style_Group) %>%
-  summarise(p_value = shapiro.test(PC1)$p.value)
+# Test for normality in each group TOO CONSERVATIVE
+#shapiro_test <- pc_scores_grouped %>%
+#  group_by(Style_Group) %>%
+#  summarise(p_value = shapiro.test(PC1)$p.value)
 
-print(shapiro_test)
+#print(shapiro_test)
 
 # Wilcoxon rank-sum test
 wilcox_test_result <- wilcox.test(PC1 ~ Style_Group, data = pc_scores_grouped)
@@ -1770,15 +1753,26 @@ wilcox_test_result <- wilcox.test(PC1 ~ Style_Group, data = pc_scores_grouped)
 print(wilcox_test_result)
 
 
-# The Wilcoxon rank-sum test result shows:
+# Small sample size of Omo 
 
-#W = 613, which is the test statistic.
+set.seed(42)
 
-#p-value = 0.3807, which is greater than 0.05.
+# Observed difference in medians or means
+obs_diff <- with(pc_scores_grouped, 
+                 median(PC1[Style_Group == "Chen Chen"]) -
+                   median(PC1[Style_Group == "Omo"]))
 
-#Since the p-value is greater than 0.05, we fail to reject the null hypothesis, 
-#meaning there is no statistically significant difference in PC1 (cob size) 
-# scores between the Chen Chen style sites and the Omo style site.
+# Permute group labels
+perm_diffs <- replicate(10000, {
+  shuffled <- sample(pc_scores_grouped$Style_Group)
+  median(pc_scores_grouped$PC1[shuffled == "Chen Chen"]) -
+    median(pc_scores_grouped$PC1[shuffled == "Omo"])
+})
+
+# Two-sided p-value
+perm_p <- mean(abs(perm_diffs) >= abs(obs_diff))
+cat("Permutation test p-value:", perm_p, "\n")
+
 
 
 
@@ -1788,9 +1782,9 @@ print(wilcox_test_result)
 # Define Chen Chen, Omo, and Ritual Complex style groups
 pc_scores_labeled <- pc_scores_labeled %>%
   mutate(Style_Group = case_when(
-    Site %in% c("M1-95-Chen-Chen", "RM-07-M43", "RM-08-M43") ~ "Chen Chen",
+    Site %in% c("M1-95-Chen-Chen", "M43", "M43") ~ "Chen Chen",
     Site == "M12" ~ "Omo",
-    Site %in% c("M10-11-Cemetery", "M10-11-Templete") ~ "Ritual Complex",  # Add Ritual Complex group
+    Site %in% c("M10") ~ "Ritual Complex",  # Add Ritual Complex group
     TRUE ~ NA_character_
   ))
 
@@ -1808,18 +1802,49 @@ ggplot(pc_scores_grouped, aes(sample = PC1, color = Style_Group)) +
   labs(title = "QQ Plots for Chen Chen, Omo, and Ritual Complex Style Groups")
 
 # Test for normality in each group
-shapiro_test <- pc_scores_grouped %>%
-  group_by(Style_Group) %>%
-  summarise(p_value = shapiro.test(PC1)$p.value)
+#shapiro_test <- pc_scores_grouped %>%
+#  group_by(Style_Group) %>%
+#  summarise(p_value = shapiro.test(PC1)$p.value)
 
-print(shapiro_test)
+#print(shapiro_test)
 
 # Kruskal-Wallis test for non-normal data
-kruskal_test_result <- kruskal.test(PC1 ~ Style_Group, data = pc_scores_grouped)
-print(kruskal_test_result)
+#kruskal_test_result <- kruskal.test(PC1 ~ Style_Group, data = pc_scores_grouped)
+#print(kruskal_test_result)
 
 # Pairwise Wilcoxon tests with p-value adjustment
 pairwise_wilcoxon <- pairwise.wilcox.test(pc_scores_grouped$PC1, pc_scores_grouped$Style_Group, p.adjust.method = "BH")
 print(pairwise_wilcoxon)
 
-# No sig difference between groups based on PC1
+# SAVE
+
+
+# ---- 1. Wilcoxon rank-sum test summary ----
+wilcox_df <- data.frame(
+  W = wilcox_test_result$statistic,
+  p_value = wilcox_test_result$p.value
+)
+
+# ---- 2. Permutation test result ----
+perm_df <- data.frame(
+  Observed_Diff = obs_diff,
+  Permutation_p_value = perm_p
+)
+
+# ---- 3. Pairwise Wilcoxon tests ----
+pairwise_df <- as.data.frame(pairwise_wilcoxon$p.value)
+pairwise_df$Comparison <- rownames(pairwise_df)
+
+# Optional: reshape if you want long-format
+# pairwise_long <- tidyr::pivot_longer(pairwise_df, -Comparison, names_to = "vs", values_to = "adjusted_p")
+
+# ---- Write all to an Excel file ----
+write_xlsx(
+  list(
+    "OmoChenChen_Wilcoxon_Test" = wilcox_df,
+    "OmoChenChen_Permutation_Test" = perm_df,
+    "OmoChenChenRitual_Pairwise" = pairwise_df
+  ),
+  path = "Supplmentary_Omo_ChenChen_Ritual.xlsx"
+)
+
