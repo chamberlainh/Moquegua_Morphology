@@ -377,17 +377,10 @@ write_xlsx(
 
 
 
-
 # Plot MH Traits Across Sites NEED TO FIX
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(ggpubr)
-
-# Step 1: Clean mh_long with consistent trait names
-# Define recode lookup as a named vector
-trait_lookup <- c(
+# 1. Define label replacements
+trait_labels <- c(
   "Cupule_number" = "Cupule Number",
   "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
   "Mean_cupule_height(mm)" = "Cupule Height (mm)",
@@ -397,20 +390,19 @@ trait_lookup <- c(
   "Total_Wt_g" = "Total Weight (g)"
 )
 
-# Apply to mh_long
-mh_long <- mh_data %>%
-  dplyr::select(Site, all_of(traits)) %>%
-  pivot_longer(cols = -Site, names_to = "Trait", values_to = "Value") %>%
+# 2. Reshape data
+mh_long <- morph_data_mh %>%
+  pivot_longer(cols = all_of(traits), names_to = "Trait", values_to = "Value") %>%
   mutate(
-    Site = as.factor(Site),
-    Trait = trait_lookup[Trait]  # safer recoding via named vector
+    Site = factor(Site),
+    Trait = dplyr::recode(Trait, !!!trait_labels)
   )
 
-# Apply to tukey results
+# 3. Prepare p-values
 pval_df <- tukey_mh_df %>%
   separate(Comparison, into = c("group1", "group2"), sep = "-") %>%
+  mutate(Trait = dplyr::recode(Trait, !!!trait_labels)) %>%
   rename(p = `p adj`) %>%
-  mutate(Trait = trait_lookup[Trait]) %>%
   left_join(
     mh_long %>%
       group_by(Trait) %>%
@@ -418,43 +410,33 @@ pval_df <- tukey_mh_df %>%
     by = "Trait"
   )
 
-# Step 2: Prepare p-value dataframe for stat_pvalue_manual
-# Also recode trait names to match plot facets
-pval_df <- tukey_mh_df %>%
-  separate(Comparison, into = c("group1", "group2"), sep = "-") %>%
-  rename(p = `p adj`) %>%
-  mutate(
-    Trait = recode(Trait,
-                   "Cupule_number" = "Cupule Number",
-                   "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
-                   "Mean_cupule_height(mm)" = "Cupule Height (mm)",
-                   "Mean_kernel_row" = "Kernel Rows",
-                   "Length_mm" = "Length (mm)",
-                   "Diameter_mm" = "Diameter (mm)",
-                   "Total_Wt_g" = "Total Weight (g)"
+pval_df <- pval_df %>%
+  mutate(p = formatC(p, format = "e", digits = 2))  # scientific notation, or use `round(p, 3)
+
+# Plot with P's
+mh_long <- mh_long %>%
+  mutate(Trait = factor(
+    Trait,
+    levels = c(
+      "Diameter (mm)",
+      "Length (mm)",
+      "Total Weight (g)",
+      "Cupule Height (mm)",
+      "Cupule Number",
+      "Cupule Width (mm)",
+      "Kernel Rows"
     )
-  ) %>%
-  left_join(
-    mh_long %>%
-      group_by(Trait) %>%
-      summarise(y.position = max(Value, na.rm = TRUE) * 1.1),
-    by = "Trait"
-  )
+  ))
 
-# Step 3: Plot with p-values
+
 ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
+  geom_blank(aes(y = Value * 1.15)) +  # Adds extra headroom for p-values
   facet_wrap(~ Trait, scales = "free_y") +
-  stat_pvalue_manual(
-    data = pval_df,
-    label = "p",
-    y.position = "y.position",
-    xmin = "group1",
-    xmax = "group2"
-  ) +
+  stat_compare_means(method = "anova", label = "p.format", size = 3) +  # Smaller p-value text
   labs(
-    title = "Morphological Trait Differences Across MH Sites",
+    title = "Morphological Trait Variation Across MH Sites",
     x = "Site", y = "Trait Value"
   ) +
   theme_minimal() +
@@ -466,14 +448,38 @@ ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
   )
 
 
-ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
+# Split MH Plots into Cobs and Cupule Characteristics
+# Define trait groupings
+cob_traits <- c("Length (mm)", "Diameter (mm)", "Total Weight (g)")
+cupule_traits <- c("Cupule Number", "Cupule Width (mm)", "Cupule Height (mm)", "Kernel Rows")
+
+ggplot(filter(mh_long, Trait %in% cob_traits), aes(x = Site, y = Value, fill = Site)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
+  geom_blank(aes(y = Value * 1.15)) +
   facet_wrap(~ Trait, scales = "free_y") +
+  stat_compare_means(method = "anova", label = "p.format", size = 3) +
   labs(
-    title = "Morphological Trait Variation Across MH Sites",
-    x = "Site",
-    y = "Trait Value"
+    title = "Cob Dimensions Across MH Sites",
+    x = "Site", y = "Trait Value"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    panel.grid = element_blank(),
+    legend.position = "none"
+  )
+
+ggplot(filter(mh_long, Trait %in% cupule_traits), aes(x = Site, y = Value, fill = Site)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
+  geom_blank(aes(y = Value * 1.15)) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  stat_compare_means(method = "anova", label = "p.format", size = 3) +
+  labs(
+    title = "Cupule Characteristics Across MH Sites",
+    x = "Site", y = "Trait Value"
   ) +
   theme_minimal() +
   theme(
@@ -486,8 +492,10 @@ ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
 
 
 
-# Plot this
-  # for stat_compare_means
+
+
+
+# Plot individual anovas for stat_compare_means
 
 # Cob Length
 ggplot(maize_data, aes(x = Site, y = Length_mm)) +
@@ -1556,10 +1564,7 @@ ggplot(filter(maize_long, Trait %in% cob_traits),
   theme(
     strip.text = element_text(size = 12, face = "bold"),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid = element_blank(),
-    #legend.position = c(0.9, 0.9),
-    #legend.justification = c("right", "top"),
-    #legend.background = element_rect(fill = alpha('white', 0.6), color = NA)
+    panel.grid = element_blank()
   )
 
 # Plot 2: Cupule Characteristics ------------------------------------------
