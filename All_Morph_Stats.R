@@ -1011,6 +1011,89 @@ write_xlsx(
 
 
 
+# Summary Stats Across Period  --------
+
+# Create summary statistics for each trait by Period
+trait_summary <- maize_data %>%
+  group_by(Period) %>%
+  summarise(
+    N_Length = sum(!is.na(Length_mm)),
+    Mean_Length = mean(Length_mm, na.rm = TRUE),
+    SD_Length = sd(Length_mm, na.rm = TRUE),
+    Min_Length = min(Length_mm, na.rm = TRUE),
+    Max_Length = max(Length_mm, na.rm = TRUE),
+    
+    N_Diameter = sum(!is.na(Diameter_mm)),
+    Mean_Diameter = mean(Diameter_mm, na.rm = TRUE),
+    SD_Diameter = sd(Diameter_mm, na.rm = TRUE),
+    Min_Diameter = min(Diameter_mm, na.rm = TRUE),
+    Max_Diameter = max(Diameter_mm, na.rm = TRUE),
+    
+    N_Cupules = sum(!is.na(Cupule_number)),
+    Mean_Cupules = mean(Cupule_number, na.rm = TRUE),
+    SD_Cupules = sd(Cupule_number, na.rm = TRUE),
+    Min_Cupules = min(Cupule_number, na.rm = TRUE),
+    Max_Cupules = max(Cupule_number, na.rm = TRUE),
+    
+    N_CupuleWidth = sum(!is.na(`Mean_Cupule_Width(mm)`)),
+    Mean_CupuleWidth = mean(`Mean_Cupule_Width(mm)`, na.rm = TRUE),
+    SD_CupuleWidth = sd(`Mean_Cupule_Width(mm)`, na.rm = TRUE),
+    Min_CupuleWidth = min(`Mean_Cupule_Width(mm)`, na.rm = TRUE),
+    Max_CupuleWidth = max(`Mean_Cupule_Width(mm)`, na.rm = TRUE),
+    
+    N_CupuleHeight = sum(!is.na(`Mean_cupule_height(mm)`)),
+    Mean_CupuleHeight = mean(`Mean_cupule_height(mm)`, na.rm = TRUE),
+    SD_CupuleHeight = sd(`Mean_cupule_height(mm)`, na.rm = TRUE),
+    Min_CupuleHeight = min(`Mean_cupule_height(mm)`, na.rm = TRUE),
+    Max_CupuleHeight = max(`Mean_cupule_height(mm)`, na.rm = TRUE),
+    
+    N_KernelRow = sum(!is.na(Mean_kernel_row)),
+    Mean_KernelRow = mean(Mean_kernel_row, na.rm = TRUE),
+    SD_KernelRow = sd(Mean_kernel_row, na.rm = TRUE),
+    Min_KernelRow = min(Mean_kernel_row, na.rm = TRUE),
+    Max_KernelRow = max(Mean_kernel_row, na.rm = TRUE),
+    
+    N_Weight = sum(!is.na(Total_Wt_g)),
+    Mean_Weight = mean(Total_Wt_g, na.rm = TRUE),
+    SD_Weight = sd(Total_Wt_g, na.rm = TRUE),
+    Min_Weight = min(Total_Wt_g, na.rm = TRUE),
+    Max_Weight = max(Total_Wt_g, na.rm = TRUE)
+  )
+
+# View the table
+print(trait_summary)
+
+# Optional: save it
+writexl::write_xlsx(trait_summary, path = "Summary_Traits_By_Period.xlsx")
+
+
+# Cupule depth for MH  --------
+# Read your CSV file
+maize_depth_data <- read_csv("cleaned_Ancient_Maize_Cob_Data_Sheet.csv")
+
+depth_summary <- maize_depth_data %>%
+  filter(!is.na(Mean_cupule_depth)) %>%
+  # group_by(Site) %>%
+  summarise(
+    N = n(),
+    Mean = mean(Mean_cupule_depth, na.rm = TRUE),
+    SD = sd(Mean_cupule_depth, na.rm = TRUE),
+    Min = min(Mean_cupule_depth, na.rm = TRUE),
+    Max = max(Mean_cupule_depth, na.rm = TRUE)
+  )
+
+print(depth_summary)
+
+# Combine your existing summaries and add depth_summary as a new sheet
+write_xlsx(
+  list(
+    "Summary_Stats" = trait_summary,
+    "Cupule_Depth" = depth_summary
+  ),
+  path = "Summary_Traits_By_Period.xlsx"
+)
+
+
 # Linear Regression across Period DOESNT WORK  --------
 # Ensure Period is a factor (you've already done this)
 maize_data$Period <- as.factor(maize_data$Period)
