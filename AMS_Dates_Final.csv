@@ -1,0 +1,21 @@
+Site,Lab_ID,Sample_ID,Section,Unit,Level,Feature,Context,Occupation,14C Age,Calibrated(1 sigma),calibrated_2_sigma
+Tres Quebradas M73,302471,ZMDNA24_05,F,Ampl 1,5,,Pit Burial,Huaracane,2500 + 15,642 – 568 BC,650 – 545 BC
+Tres Quebradas M73,302488,ZMDNA24_04,F,3ampl.2b,2,20,Pit Burial,Huaracane,1895 + 15,AD 122 - 169,AD 116 -210
+Tres Quebradas M73,302470,ZMDNA24_03,,,,98-4 Ent. 4 - Ind. A,Pit Burial,Huaracane,1775 + 20,AD 286 - 325,AD 276 - 340
+Cerro Trapiche M7,302472,ZMDNA24_47,C,1tt,2c,,Wari Structure 1,Huaracane/Wari/Tiwanaku,1255 + 20,AD 685 - 743,AD 674 - 778
+Cerro Trapiche M7,302487,ZMDNA24_50,C,1tt,2c,,Wari Structure 1,Huaracane/Wari/Tiwanaku,1200 + 15,AD 821 – 880,AD 774 – 884
+Rio Muerto M43,302481,M43=6385.01,F,6a,11,,"Domestic, Subfloor",Tiwanaku,1210 + 15,AD 786 - 832,AD 782 - 880
+Cerro Trapiche M7,302486,ZMDNA24_35,C,1tt,3c,,Wari Structure 1,Huaracane/Wari/Tiwanaku,1230 + 15,AD 787 – 827,AD 785 - 878
+Rio Muerto M43,302483,M43=6261.06,F,6a,3,,"Domestic, Floor",Tiwanaku,1195 + 15,AD 825 – 880,AD 798 - 885
+Chen Chen M1,302473,M1=124039.06,,5466,,,Domestic,Tiwanaku,1185 + 15,AD 828 - 860,AD 800 - 890
+Rio Muerto M43,302479,M43=6385.02,F,6a,11,,"Domestic, Subfloor",Tiwanaku,1175 + 15,AD 829 – 856,AD 820 - 894
+Rio Muerto M43,302480,M43=6385.10,F,6a,11,,"Domestic, Subfloor",Tiwanaku,1165 + 15,AD 875 - 893,AD 825 - 896
+Rio Muerto M43,302482,M43=6174.07,F,6a,,22,Posthole,Tiwanaku,1155 + 20,AD 920 – 955,AD 826 - 903
+Rio Muerto M43,302476,M43=6503.06,F,6a,4a,,"Domestic, Floor",Tiwanaku,1135 + 15,AD 920 - 956,AD 881 - 979
+Rio Muerto M43,302478,M43=6174.02,F,6a,,22,Posthole,Tiwanaku,1130 + 15,AD 918 - 972,AD 884 - 980
+Rio Muerto M43,302477,M43=6174.05,F,6a,,22,Posthole,Tiwanaku,1095 + 20,AD 956 – 992,AD 892 - 995
+Rio Muerto M43,302484,M43=6321.09,F,6a,5A,,"Domestic, Floor",Tiwanaku,1155 + 15,AD 923 - 951,AD 916 - 973
+Rio Muerto M43,302485,M43=6174.09,F,6a,,22,Posthole,Tiwanaku,1100 + 15,AD 959 - 991,AD 942 - 994 
+Omo M10,302474,M10=12744.02,A,270,,,Temple Cemetery,Tiwanaku,1020+ 15,AD  922 - 955,AD  920 - 957
+Omo M10,302475,M10=7942.17,W,712,2B,,Domestic Midden,Tiwanaku,1195 + 15,AD 1067 - 1124 ,AD  1063 - 1175
+Cerro Chamos M44,302489,ZMDNA24_65,C,2 Terraza 2,2,16,"Domestic, Terrace",Tumilaca,950 + 15,AD 1083 – 1150,AD 1072 - 1158

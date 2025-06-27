@@ -2063,3 +2063,233 @@ write_xlsx(
   path = "Supplmentary_Omo_ChenChen_Ritual.xlsx"
 )
 
+
+# AMS Dates ---------------------------------------------------
+
+ams_dates <- read_csv("AMS_Dates_Final.csv")
+
+
+maize_dated <- maize_data %>%
+  inner_join(ams_dates %>% select(Sample_ID, `calibrated_2_sigma`), by = "Sample_ID")
+
+
+morphology_long <- maize_dated %>%
+  dplyr::select(Sample_ID, Period, calibrated_2_sigma, 
+                Length_mm,
+                Diameter_mm,
+                Cupule_number,
+                `Mean_Cupule_Width(mm)`,
+                `Mean_cupule_height(mm)`,
+                Mean_kernel_row,
+                Total_Wt_g) %>%
+  pivot_longer(cols = -c(Sample_ID, Period, calibrated_2_sigma), 
+               names_to = "Trait", values_to = "Value")%>%
+  filter(!is.na(Value))
+
+
+# Sample size too small for real stats, but can look for patterns
+# Summary Stats
+trait_summary <- morphology_long %>%
+  group_by(Trait, Period) %>%
+  summarise(
+    n = sum(!is.na(Value)),
+    mean = mean(Value, na.rm = TRUE),
+    sd = sd(Value, na.rm = TRUE),
+    min = min(Value, na.rm = TRUE),
+    max = max(Value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Plot
+ggplot(morphology_long, aes(x = Period, y = Value, fill = Period)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.7, size = 2) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  theme_bw() +
+  ggtitle("Trait Distributions by Period (n = 20)")
+
+
+# Ensure Period is a factor for correct order (adjust levels as needed)
+trait_summary$Period <- factor(trait_summary$Period, levels = c("LF", "LF/MH", "MH", "LIP"))
+
+# Line plot of mean trait values by period
+ggplot(trait_summary, aes(x = Period, y = mean, group = Trait, color = Trait)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Mean Trait Values by Period",
+    x = "Period",
+    y = "Mean Trait Value",
+    color = "Trait"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+# MH Stats only
+mh_data <- maize_dated %>%
+  filter(Period == "MH")
+
+mh_data %>%
+  select(Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g) %>%
+  summary()
+
+
+mh_long <- mh_data %>%
+  pivot_longer(
+    cols = c(Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+             `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g),
+    names_to = "Trait", values_to = "Value"
+  )
+
+# Plot MH
+ggplot(mh_long, aes(x = Trait, y = Value)) +
+  geom_boxplot(outlier.shape = NA, fill = "lightblue") +
+  geom_jitter(width = 0.1, alpha = 0.5) +
+  theme_minimal() +
+  labs(title = "Trait Distributions Within MH", y = "Value", x = "Trait") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Look at pairwise correlations
+mh_numeric <- mh_data %>%
+  select(Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g)
+
+cor_matrix <- cor(mh_numeric, use = "pairwise.complete.obs")
+round(cor_matrix, 2)
+
+# Prepare data to save
+mh_summary <- mh_data %>%
+  select(Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g) %>%
+  summarise(across(everything(),
+                   list(n = ~sum(!is.na(.)),
+                        mean = ~mean(., na.rm = TRUE),
+                        sd = ~sd(., na.rm = TRUE),
+                        min = ~min(., na.rm = TRUE),
+                        max = ~max(., na.rm = TRUE)))) %>%
+  pivot_longer(everything(),
+               names_to = c("Trait", ".value"),
+               names_sep = "_")
+
+cor_matrix <- mh_data %>%
+  select(Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g) %>%
+  cor(use = "pairwise.complete.obs") %>%
+  round(2) %>%
+  as.data.frame()
+
+cor_matrix <- tibble::rownames_to_column(cor_matrix, "Trait")
+
+# Save
+write_xlsx(
+  list(
+    "Trait_Summary" = trait_summary,
+    "MH_Summary" = mh_summary,
+    "MH_Correlations" = cor_matrix
+  ),
+  path = "Trait_Summary_AMS.xlsx"
+)
+
+# Trends within sorted MH by AMS dates
+
+mh_data <- maize_dated %>%
+  filter(Period == "MH" & !is.na(calibrated_2_sigma))
+
+unique(mh_data$calibrated_2_sigma)
+
+mh_data <- mh_data %>%
+  mutate(cal_2sigma_clean = gsub("\\s+", "", calibrated_2_sigma))  # remove whitespace
+
+
+mh_data$cal_2sigma_clean <- factor(mh_data$cal_2sigma_clean, levels = sort(unique(mh_data$cal_2sigma_clean)))
+
+mh_long <- mh_data %>%
+  select(Sample_ID, cal_2sigma_clean,
+         Length_mm, Diameter_mm, Cupule_number, `Mean_Cupule_Width(mm)`,
+         `Mean_cupule_height(mm)`, Mean_kernel_row, Total_Wt_g) %>%
+  pivot_longer(
+    cols = -c(Sample_ID, cal_2sigma_clean),
+    names_to = "Trait",
+    values_to = "Value"
+  ) %>%
+  filter(!is.na(Value))
+
+
+# Define custom order (adjust as needed)
+date_lookup <- c(
+    "M43=6385.01"    = "AD 782 - 880",
+    "M43=6261.06"    = "AD 798 - 885",
+    "M1=124039.06"   = "AD 800 - 890",
+    "M43=6385.02"    = "AD 820 - 894",
+    "M43=6385.10"    = "AD 825 - 896",
+    "M43=6174.07"    = "AD 826 - 903",
+    "M43=6503.06"    = "AD 881 - 979",
+    "M43=6174.02"    = "AD 884 - 980",
+    "M43=6174.05"    = "AD 892 - 995",
+    "M43=6321.09"    = "AD 916 - 973",
+    "M43=6174.09"    = "AD 942 - 994",
+    "M10=12744.02"   = "AD 920 - 957",
+    "M10=7942.17"    = "AD  1063 - 1175"
+  )
+
+mh_long <- mh_long %>%
+  mutate(calibrated_2_sigma = date_lookup[Sample_ID])
+
+cal_2sigma_order <- unique(date_lookup)  # use the correct order from your lookup
+mh_long$calibrated_2_sigma <- factor(mh_long$calibrated_2_sigma, levels = cal_2sigma_order)
+
+
+ggplot(mh_long, aes(x = calibrated_2_sigma, y = Value, group = Trait, color = Trait)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point", size = 2) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "MH Trait Trends by Sample Calibrated 2-Sigma Date",
+    x = "Calibrated 2-Sigma Date",
+    y = "Trait Value"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# Step 1: Calculate summary stats for each trait and date
+mh_trait_stats <- mh_long %>%
+  group_by(Trait) %>%
+  summarise(
+    mean = mean(Value, na.rm = TRUE),
+    sd = sd(Value, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(label = paste0("n = ", n, "\nM = ", round(mean, 1), "\nSD = ", round(sd, 1)))
+
+
+# Step 2: Plot with stat_summary + summary labels
+ggplot(mh_long, aes(x = calibrated_2_sigma, y = Value, group = Trait, color = Trait)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point", size = 2) +
+  geom_text(
+    data = mh_trait_stats,
+    aes(x = 1, y = Inf, label = label),
+    inherit.aes = FALSE,
+    size = 3,
+    vjust = 1.1,
+    hjust = 0,
+    color = "black"
+  ) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "AMS MH Trait Trends Over Time (Per-Trait Summary Stats)",
+    x = "Calibrated 2-Sigma Date",
+    y = "Trait Value"
+  ) +
+  theme(panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+
