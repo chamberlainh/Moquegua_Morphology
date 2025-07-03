@@ -111,7 +111,7 @@ traits <- c(
 
 # 5. Subset the data to keep only Site and these traits
 morph_data <- maize_data %>%
-  select(Site, all_of(traits))
+  dplyr::select(Site, all_of(traits))
 
 # 6. Create a matrix of just the numeric traits
 morph_matrix <- as.matrix(morph_data[, traits])
@@ -168,12 +168,41 @@ univariate_df <- do.call(rbind, lapply(names(univariate_list), function(trait) {
     mutate(Trait = trait)
 }))
 
+# Summary Stats
+# Start fresh from full maize_data
+morphology_data <- maize_data %>%
+  dplyr::select(Site, Length_mm, Diameter_mm, Cupule_number,
+         `Mean_Cupule_Width(mm)`, `Mean_cupule_height(mm)`,
+         Mean_kernel_row, Total_Wt_g)
+
+# Then pivot
+morphology_long <- morphology_data %>%
+  pivot_longer(cols = -Site, names_to = "Trait", values_to = "Value")
+
+
+morph_summary_stats <- morphology_long %>%
+  group_by(Trait) %>%
+  summarise(
+    N = sum(!is.na(Value)),
+    Missing = sum(is.na(Value)),
+    Mean = mean(Value, na.rm = TRUE),
+    SD = sd(Value, na.rm = TRUE),
+    Min = min(Value, na.rm = TRUE),
+    Max = max(Value, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+
+
+
+# Save
 write_xlsx(
   list(
     "Welch_ANOVA" = welch_df,
     "Games_Howell" = games_df,
     "MANOVA_Pillai" = manova_df,
-    "Univariate_ANOVAs" = univariate_df
+    "Univariate_ANOVAs" = univariate_df,
+    "Summary_Stats" = morph_summary_stats
   ),
   path = "Supplementary_Morphology_Stats.xlsx"
 )
@@ -1117,6 +1146,23 @@ contrast_LIP <- contrast(pairwise_results,
                            method = "trt.vs.ctrl", 
                            ref = "LIP")  # LIP is the reference
 print(contrast_LIP)
+
+# Get site counts
+site_counts_by_period <- maize_data %>%
+  dplyr::select(Site, Period) %>%
+  distinct() %>%                     # Remove duplicate site-period pairs
+  group_by(Period) %>%
+  summarise(Site_Count = n_distinct(Site)) %>%
+  arrange(Period)
+
+print(site_counts_by_period)
+
+n_per_site_period <- maize_data %>%
+  group_by(Site, Period) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  arrange(Period, Site)
+
+print(n_per_site_period)
 
 # Save
 lf_mh_df <- as.data.frame(contrast_LF_MH)
@@ -2122,7 +2168,7 @@ pc_scores_labeled <- pc_scores_labeled %>%
   mutate(Style_Group = case_when(
     Site %in% c("M1-95-Chen-Chen", "M43", "M43") ~ "Chen Chen",
     Site == "M12" ~ "Omo",
-    Site %in% c("M10") ~ "Ritual Complex",  # Add Ritual Complex group
+    Site %in% c("M10") ~ "M10",  # Add Ritual Complex group
     TRUE ~ NA_character_
   ))
 
@@ -2183,7 +2229,7 @@ write_xlsx(
     "OmoChenChen_Permutation_Test" = perm_df,
     "OmoChenChenRitual_Pairwise" = pairwise_df
   ),
-  path = "Supplmentary_Omo_ChenChen_Ritual.xlsx"
+  path = "Supplmentary_Omo_ChenChen_M10.xlsx"
 )
 
 
