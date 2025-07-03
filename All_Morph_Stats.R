@@ -21,6 +21,7 @@ library(rstatix)
 library(broom)
 library(writexl)
 library(RColorBrewer)
+library(multcomp)
 
 
 
@@ -283,7 +284,129 @@ for (trait in significant_traits) {
 }
 
 
+# # LIP SITES ONLY ---------------------------------------------------------
 
+
+# Filter data for LIP only
+lip_data <- maize_data %>%
+  filter(Period == "LIP")
+
+# Make sure 'Site' is a factor
+lip_data$Site <- as.factor(lip_data$Site)
+
+# Define morphological traits (adjust names if needed)
+traits <- c(
+  "Length_mm",
+  "Diameter_mm",
+  "Cupule_number",
+  "Mean_Cupule_Width(mm)",
+  "Mean_cupule_height(mm)",
+  "Mean_kernel_row",
+  "Total_Wt_g"
+)
+
+# Subset data to keep Site and traits
+morph_data_lip <- lip_data %>%
+  dplyr::select(Site, all_of(traits))
+
+# Create matrix of numeric traits
+morph_matrix_lip <- as.matrix(morph_data_lip[, traits])
+
+# Fit MANOVA: traits ~ Site (within LIP period)
+manova_model_lip <- manova(morph_matrix_lip ~ Site, data = morph_data_lip)
+
+# Summarize MANOVA results using Pillai's trace
+manova_summary_lip <- summary(manova_model_lip, test = "Pillai")
+print(manova_summary_lip)
+
+# Look at univariate ANOVA results for each trait
+univariate_results_lip <- summary.aov(manova_model_lip)
+print(univariate_results_lip)
+
+
+# For significant trait total weight, run ANOVA and then Tukey HSD post-hoc test
+
+significant_traits <- c("Total_Wt_g")
+
+posthoc_results <- list()
+
+# for (trait in significant_traits) {
+# Fit an ANOVA model with Site as factor
+# formula_str <- as.formula(paste(trait, "~ Site"))
+# anova_model <- aov(formula_str, data = morph_data_mh)
+
+for(trait in traits){
+  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+  anova_model <- aov(formula_str, data = morph_data_lip)
+  tukey_res <- TukeyHSD(anova_model)
+  posthoc_results[[trait]] <- summary(tukey_res)
+}
+
+
+# Print post-hoc test results
+# Calculate and store Tukey HSD post-hoc tests
+posthoc_results <- list()
+
+for (trait in significant_traits) {
+  cat("\nPost-hoc results for trait:", trait, "\n")
+  
+  # Use backticks around variable names to handle special characters
+  formula_str <- paste0("`", trait, "` ~ Site")
+  aov_model <- aov(as.formula(formula_str), data = morph_data_lip)
+  
+  # Tukey HSD
+  tukey <- TukeyHSD(aov_model)
+  
+  # Store result
+  posthoc_results[[trait]] <- tukey
+  
+  # Print result
+  print(tukey)
+}
+
+
+# SAVE AS A SPREADSHEET
+# Make MANOVA df for lip
+manova_df_lip <- as.data.frame(manova_summary_mh$stats)
+colnames(manova_df_lip) <- c("Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")
+manova_df_lip$Effect <- rownames(manova_df_lip)
+manova_df_lip <- manova_df_lip[, c("Effect", "Df", "Pillai", "approx_F", "num_Df", "den_Df", "Pr(>F)")]
+
+# Make univariate ANOVA df for lip
+univariate_df_lip <- do.call(rbind, lapply(names(univariate_results_lip), function(trait) {
+  broom::tidy(univariate_results_lip[[trait]]) %>%
+    mutate(Trait = trait)
+}))
+
+# Make Tukey from ANOVA df for MH
+
+posthoc_results <- list()
+
+for (trait in traits) {
+  formula_str <- as.formula(paste0("`", trait, "` ~ Site"))
+  anova_model <- aov(formula_str, data = morph_data_lip)
+  tukey_res <- TukeyHSD(anova_model)
+  posthoc_results[[trait]] <- tukey_res  # store raw Tukey result
+}
+
+tukey_lip_df <- do.call(rbind, lapply(names(posthoc_results), function(trait) {
+  # Extract just the site comparison table
+  tukey_result <- posthoc_results[[trait]]$Site
+  df <- as.data.frame(tukey_result)
+  df$Comparison <- rownames(tukey_result)
+  df$Trait <- trait
+  df
+})) %>%
+  dplyr::select(Trait, Comparison, diff, lwr, upr, `p adj`)
+
+write_xlsx(
+  list(
+    "MANOVA_LIP" = manova_df_lip,
+    "ANOVA_LIP" = univariate_df_lip,
+    "TukeyHSD_LIP" = tukey_lip_df
+  ),
+  path = "Supplementary_LIP_Traits_with_AllSites.xlsx"
+)
 
 
 
