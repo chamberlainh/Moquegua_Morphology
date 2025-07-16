@@ -8,7 +8,7 @@ This folder contains files necessary to calibrate and model AMS radiocarbon date
 
 ### Data Files
 
-- `Somerville_ChamberlainDec29_24.xls` – - `Somerville_ChamberlainDec29_24.xls` - Spreadsheet with raw AMS radiocarbon data, calibrated dates, and Bayesian script for RMM43 6a.
+- `Somerville_ChamberlainDec29_24.xls` - Spreadsheet with raw AMS radiocarbon data and calibrated dates.
 
 - `AMS_Dates_Final.csv` – Spreadsheet version with archeological contexts.
 
