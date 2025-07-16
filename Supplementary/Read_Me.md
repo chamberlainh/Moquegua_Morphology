@@ -9,6 +9,8 @@ This folder contains supplementary statistics generated during the analysis of P
 ### Generated Files
 
 - `Supplementary_Morphological_Stats.xlsx` – Initial statistics of all traits over all sites.
+  
+- `Supplementary_3D_Model_Key.xlsx` – Sample information for 3D morphometric analysis.
 
 - `Supplementary_Maize_Period_Contrasts.xlsx` – Statistics between time periods.
 
@@ -18,7 +20,7 @@ This folder contains supplementary statistics generated during the analysis of P
   
 - `Supplementary_LIP_Traits_with_AllSites.xlsx` – Statistics between Late Intermediate Period sites.
   
-
+## Also see
 ### R Scripts
   
 - See `All_Morph_Stats.R` in Morphological Analysis folder. 
