@@ -11,21 +11,13 @@ This folder contains all the generated visuals from Permit 1 and Permit 1 and 2 
 #### Summary Statistics & Regression
 
 `MANOVA_Tukey_Summary.png` – Summary of MANOVA and Tukey HSD comparisons.
-
 `Regression_All_Traits_Period.png` – Linear regressions of all traits across archaeological periods.
-
 `Regression_All_Traits_Time_Final.png` – Final regression model showing trait changes over time.
-
 `Linear_Cob` – Regression model output for cob traits.
-
 `Linear_Cob.png` – Regression plots of cob traits.
-
 `Linear_Cob_pvalues.png` – Associated p-values for cob regression models.
-
 `Linear_Cupule` – Regression model output for cupule traits.
-
 `Linear_Cupule.png` – Regression plots of cupule traits.
-
 `Linear_Cupule_TEST.png` – Test version of cupule regression output.
 
 
