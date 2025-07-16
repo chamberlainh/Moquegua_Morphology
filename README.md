@@ -2,55 +2,18 @@
 
 ## Overview
 
-This repository contains the data and analysis for the morphological measurements and AMS radiocarbon dates of 340 archaeological maize specimens from the Moquegua Valley, Peru. The project aims to explore variation in maize cob morphology from the Middle Horizon period and generate visualizations to aid in statistical analysis.
+This repository contains the data and analysis for the morphological measurements and AMS radiocarbon dates of 360 archaeological maize specimens from the Moquegua Valley, Peru. The project aims to explore variation in maize cob morphology from the Late Formative, Middle Horizon, and Late Intermediate Periods and generate visualizations to aid in statistical analysis.
 
 ## Repository Contents
 
-### Data Files
+### AMS
 
-- `cleaned_Ancient_Maize_Cob_Data_Sheet.csv` – Raw measurement data for the Middle Horizon maize specimens.
+This folder contains raw, calibrated, and modeled AMS radiocarbon data.
 
-- `cleaned_Ancient_Maize_Cob_Data_Sheet.xlsx` – Spreadsheet version of the raw measurement data.
-  
-- `Somerville_ChamberlainDec29_24.xls` - Spreadsheet with raw AMS radiocarbon data, calibrated dates, and Bayesian script for RMM43 6a.
+### Morpholotical Analysis
 
-### R Scripts
+This folder contains raw, calibrated, and modeled AMS radiocarbon data.
 
-- `Morph_Stats.R` – R script for statistical analysis and visualization of morphological measurements.
-
-### Plots & Visualizations
-
-- `Boxplot_All_Traits.png` – Boxplot summarizing all measured traits.
-
-- `Boxplot_Cupule_Depth_By_Site.png` – Boxplot of cupule depth categorized by archaeological site.
-
-- `Boxplot_KRN_By_Site.png` – Boxplot of kernel row number (KRN) by site.
-
-- `Cluster_All_Traits_By_Site.png` – Clustering visualization of all traits by site.
-
-- `Pairwise_Traits_Games_Howell.png` – Pairwise comparison of traits using the Games-Howell test.
-  
-- `Moquegua_Maize_All_AMS.png` - Calibrated AMS radiocarbon dates for all MH specimens.
-  
-- `RMM43F_Table.png` - OxCal table to calculate Bayesian analysis for RMM43 6a.
-  
-- `RMM43F_Color.png` - Bayesian analysis of RMM43 6a.
-
-### Project Files
-
-- `Moquegua_Morphology.Rproj` – R project file to organize and manage the analysis.
-
-- `.gitignore` – Specifies files and directories to be ignored by Git.
-
-- `README.md` – This document.
-
-## Usage
-
-- Load the dataset into R using `read.csv("cleaned_Ancient_Maize_Cob_Data_Sheet.csv")`.
-
-- Run `Morph_Stats.R` to generate descriptive statistics and visualizations.
-
-- Check the output .png files for graphical summaries of the data.
 
 ## Citation
 
