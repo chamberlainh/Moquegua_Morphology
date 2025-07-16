@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains R project, R script, and data files for morphological analysis. For morphometric analysis on 3D shapes, see the repository https://webserver.anthro.univie.ac.at/heascloud/index.php/f/31564.
+This folder contains R project, R script, and data files for morphological analysis. For 3D models, see the repository https://webserver.anthro.univie.ac.at/heascloud/index.php/f/31564.
 
 ## File Contents
 
