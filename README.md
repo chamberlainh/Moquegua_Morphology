@@ -8,7 +8,7 @@ This repository contains the data and analysis for the morphological measurement
 
 ### AMS
 
-This folder contains raw, calibrated, and modeled AMS radiocarbon data.
+This folder contains the raw, calibrated, and modeled AMS radiocarbon data.
 
 ### Morpholotical Analysis
 
