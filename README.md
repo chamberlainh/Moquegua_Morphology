@@ -10,7 +10,7 @@ This repository contains the data and analysis for the morphological measurement
 
 This folder contains the raw, calibrated, and modeled AMS radiocarbon data.
 
-### Morpholotical Analysis
+### Morphological Analysis
 
 This folder contains R project, R script, and data files for morphological analysis. For 3D models, see the repository https://webserver.anthro.univie.ac.at/heascloud/index.php/f/31564.
 
