@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the data and analysis for the morphological measurements and AMS radiocarbon dates of 360 archaeological maize specimens from the Moquegua Valley, Peru. The project aims to explore variation in maize cob morphology from the Late Formative, Middle Horizon, and Late Intermediate Periods and generate visualizations to aid in statistical analysis.
+This repository contains the data and analysis for the morphological measurements and AMS radiocarbon dates of 360 archaeological maize specimens from the Moquegua Valley, Peru. The project aims to explore variation in maize cob morphology from the Late Formative, Middle Horizon, and Late Intermediate Periods and generate visualizations to aid in statistical analysis. NOTE: Some analysis is split into a subset of samples from the Middle Horizon from Permit 1. These are indicated as such. Otherwise, the analysis is for the full dataset from Permits 1 and 2.
 
 ## Repository Contents
 
@@ -16,6 +16,7 @@ This folder contains R project, R script, and data files for morphological analy
 
 ### Visuals
 
+This folder contains all the generated visuals from Permit 1 and Permit 1 and 2 exploration.
 
 ## Citation
 
