@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains files necessary to calibrate and model AMS radiocarbon dates of 20 archeolgical specimens.
+This folder contains the raw, calibrated, and modeled AMS radiocarbon data.
 
 ## File Contents
 
