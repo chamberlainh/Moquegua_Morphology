@@ -23,7 +23,8 @@ library(writexl)
 library(RColorBrewer)
 library(multcomp)
 
-
+# Set working directory
+setwd("C:/Users/chamb/OneDrive/Documents/Moquegua_Morphology/Morphological_Analysis")
 
 # Define file path
 
@@ -600,7 +601,7 @@ ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
   )
 
 
-# Split MH Plots into Cobs and Cupule Characteristics
+# Split MH Plots into Cobs and Cupule Characteristics FIG FOR PUB
 # Define trait groupings
 cob_traits <- c("Length (mm)", "Diameter (mm)", "Total Weight (g)")
 cupule_traits <- c("Cupule Number", "Cupule Width (mm)", "Cupule Height (mm)", "Kernel Rows")
@@ -610,38 +611,50 @@ ggplot(filter(mh_long, Trait %in% cob_traits), aes(x = Site, y = Value, fill = S
   geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
   geom_blank(aes(y = Value * 1.15)) +
   facet_wrap(~ Trait, scales = "free_y") +
-  stat_compare_means(method = "anova", label = "p.format", size = 3) +
+  stat_compare_means(method = "anova", label = "p.format", size = 4) +
   labs(
-    title = "Cob Dimensions Across MH Sites",
+    title = "A. Cob Dimensions Across MH Sites",
     x = "Site", y = "Trait Value"
   ) +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    strip.text = element_text(face = "bold"),
-    panel.grid = element_blank(),
-    legend.position = "none"
+    strip.text = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 18),
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    axis.title = element_text(size = 16),                       # Axis titles
+    axis.text = element_text(size = 14),                        # Axis tick labels
+    legend.title = element_text(size = 16),                     # Legend title
+    legend.text = element_text(size = 14),   
+    panel.grid = element_blank()
   )
+
+#Save
+ggsave("Cob_Dimensions_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 ggplot(filter(mh_long, Trait %in% cupule_traits), aes(x = Site, y = Value, fill = Site)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
   geom_blank(aes(y = Value * 1.15)) +
   facet_wrap(~ Trait, scales = "free_y") +
-  stat_compare_means(method = "anova", label = "p.format", size = 3) +
+  stat_compare_means(method = "anova", label = "p.format", size = 4) +
   labs(
-    title = "Cupule Characteristics Across MH Sites",
+    title = "B. Cupule Characteristics Across MH Sites",
     x = "Site", y = "Trait Value"
   ) +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    strip.text = element_text(face = "bold"),
-    panel.grid = element_blank(),
-    legend.position = "none"
+    strip.text = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 18),
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    axis.title = element_text(size = 16),                       # Axis titles
+    axis.text = element_text(size = 14),                        # Axis tick labels
+    legend.title = element_text(size = 16),                     # Legend title
+    legend.text = element_text(size = 14),   
+    panel.grid = element_blank()
   )
 
-
+#Save
+ggsave("Cupule_Characteristics_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 
 
@@ -828,7 +841,7 @@ write_xlsx(
 )
 
 
-# Plot CDA ----------------------------------------------------------------
+# Plot CDA FIG FOR PUB ----------------------------------------------------------------
 
 
 # Fit MANOVA model with all traits
@@ -849,16 +862,104 @@ cda <- candisc(manova_model)
 head(cda$scores)
 
 
-# Plot canonical variates with custom axis limits
+# TEST FOR PUB
+while (dev.cur() > 1) dev.off()
+
+# Extract scores and manually add the Site info
+# Extract the model frame used in MANOVA
+model_data <- model.frame(manova_model)
+
+# Add Site to the CDA scores
+scores <- cda$scores
+scores$Site <- model_data$Site  # This will match row-for-row
+scores$Site <- as.factor(scores$Site)
+
+
+# Now safely get the levels
+site_levels <- levels(scores$Site)
+n_sites <- length(site_levels)
+
+# Colors and symbols
+colors <- 1:n_sites
+pch_vals <- 1:n_sites
+
+# Extract eigenvalues and compute proportion of variance
+eig_vals <- cda$eigenvalues
+var_explained <- eig_vals / sum(eig_vals) * 100
+
+# Round for display
+can1_percent <- round(var_explained[1], 1)
+can2_percent <- round(var_explained[2], 1)
+
+xlab <- paste0("Can1 (", can1_percent, "%)")
+ylab <- paste0("Can2 (", can2_percent, "%)")
+
+
+
+# Manually add axis labels with title()
+title(xlab = xlab, ylab = ylab)
+plot(
+  scores$Can1, scores$Can2,
+  col = colors[scores$Site],
+  pch = pch_vals[scores$Site],
+  xlab = "Can1 (74.2%)",
+  ylab = "Can2 (12.6%)",
+  main = "CDA Trait Differences Across Sites"
+)
+
+# Legend
+legend("topright",
+       legend = site_levels,
+       col = colors,
+       pch = pch_vals,
+       title = "Site",
+       cex = 0.8)
+
+# Extract trait loadings for the first two canonical dimensions
+trait_loadings <- cda$structure[, 1:2]
+# Scale loadings for visualization
+arrow_scale <- 5  # Adjust as needed
+trait_loadings_scaled <- trait_loadings * arrow_scale
+# Add arrows
+arrows(
+  x0 = 0, y0 = 0,
+  x1 = trait_loadings_scaled[, 1],
+  y1 = trait_loadings_scaled[, 2],
+  length = 0.1, col = "darkgray", lwd = 1.5
+)
+
+# Add trait labels at end of arrows
+text(
+  x = trait_loadings_scaled[, 1],
+  y = trait_loadings_scaled[, 2],
+  labels = rownames(trait_loadings),
+  col = "black",
+  cex = 0.9,
+  pos = 4
+)
+
+
+
+# ORIGNAL CDA FIG FOR PUB
+# Fit MANOVA model with all traits
+maize_data_no_outlier <- maize_data[-185, ]
+maize_data_no_outlier$Site <- factor(maize_data_no_outlier$Site)
+
+# Open JPEG device FIG FOR PUB
+jpeg("CDA_Traits_Sites.jpg", width = 10, height = 5, units = "in", res = 300)
+
+
+# Plot canonical variates with custom axis limits WORKS
 plot(cda,
      main = "CDA for Traits Across Sites",
      xlim = c(-8, 14),
      ylim = c(-8, 8),
-     cex = 0.3  # Smaller text for trait labels
+     cex = 0.3        # Smaller text for trait labels
 )
 
-# Add legend
-legend(x = 15, y = 0,  # Adjust these values based on your plot
+
+# Add legend 
+legend(x = 21, y = 8,  # Adjust these values based on your plot
        legend = levels(maize_data_no_outlier$Site),
        pch = 1:length(levels(maize_data_no_outlier$Site)),
        col = 1:length(levels(maize_data_no_outlier$Site)),
@@ -866,9 +967,10 @@ legend(x = 15, y = 0,  # Adjust these values based on your plot
        cex = 0.7, 
        bty = "n")
 
+# Close device if saving
+dev.off()
 
-
-# TRY WITHOUT WEIGHT BC Not Stat Sig
+# TRY WITHOUT WEIGHT BC Not Stat Sig 
 
 # Fit MANOVA model with all traits
 maize_data_no_outlier <- maize_data[-185, ]
@@ -891,15 +993,25 @@ head(cda$scores)
 summary(scores$Can2)
 
 # Where is the M10 outlier?
-outlier_row <- scores[which.min(scores$Can2), ]
-print(outlier_row)
+#outlier_row <- scores[which.min(scores$Can2), ]
+#print(outlier_row)
 
+scores <- cda$scores
+
+scores <- cda$scores
+plot(scores$Can1, scores$Can2, col = scores$Site,
+     pch = as.numeric(scores$Site),
+     xlab = "Can1", ylab = "Can2", main = "CDA Scores by Site")
+
+# Set legend as factor
+maize_data_no_outlier$Site <- factor(maize_data_no_outlier$Site)
 
 # Plot canonical variates with custom axis limits
 plot(cda,
      main = "CDA for Significant Traits Across Sites (No Weight)",
      xlim = c(-8, 14),
-     ylim = c(-8, 8)
+     ylim = c(-8, 8),
+     cex = 5.0  # Increase this for larger point symbols
 )
 
 # Add legend
@@ -912,6 +1024,8 @@ legend(
   cex = 0.6, 
   bty = "n"
 )
+
+
 
 
 # Check M12 and M73 again
@@ -1610,6 +1724,14 @@ ggplot(maize_long, aes(x = Period, y = Value, fill = Period)) +
 
 
 # Linear Regression ---------------------------------------------------------------------
+period_colors <- c(
+  "LF" = "#fc8d62",       # greenish
+  "LF/MH" = "#66c2a5",   # orangish
+  "MH" = "#8da0cb",      # bluish
+  "LIP" = "#e78ac3"      # pinkish
+)
+
+scale_fill_manual(values = period_colors)
 
 
 maize_data$Period_numeric <- dplyr::recode(maize_data$Period,
@@ -1788,7 +1910,7 @@ ggplot(maize_long, aes(x = Period_numeric, y = Value)) +
 
 
 
-# Linear w 2 plots ---------------------------------------------------------------------
+# Linear w 2 plots FIG FOR PUB ---------------------------------------------------------------------
 
 # Create a list of traits to filter
 cob_traits <- c("Length (mm)", "Diameter (mm)", "Total Weight (g)")
@@ -1803,21 +1925,29 @@ ggplot(filter(maize_long, Trait %in% cob_traits),
   stat_poly_eq(
     aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
     formula = y ~ x, parse = TRUE,
-    label.x.npc = "center", label.y.npc = 1.0, size = 3
+    label.x.npc = "center", label.y.npc = 1.0, size = 4
   ) +
   facet_wrap(~ Trait, scales = "free_y") +
   scale_color_manual(values = period_colors) +
   scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
   labs(
     x = "Time Period", y = "Trait Value",
-    title = "Linear Regression of Cob Dimensions Across Time Periods"
+    title = "A. Linear Regression of Cob Dimensions Across Time Periods"
   ) +
   theme_minimal() +
   theme(
-    strip.text = element_text(size = 12, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 18),
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    axis.title = element_text(size = 16),                       # Axis titles
+    axis.text = element_text(size = 14),                        # Axis tick labels
+    legend.title = element_text(size = 16),                     # Legend title
+    legend.text = element_text(size = 14),   
     panel.grid = element_blank()
   )
+
+#Save
+ggsave("Linear_Regression_Cob_Dimesions.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 # Plot 2: Cupule Characteristics ------------------------------------------
 ggplot(filter(maize_long, Trait %in% cupule_traits),
@@ -1828,28 +1958,35 @@ ggplot(filter(maize_long, Trait %in% cupule_traits),
   stat_poly_eq(
     aes(label = paste(..eq.label.., ..p.value.label.., sep = "~~~")),
     formula = y ~ x, parse = TRUE,
-    label.x.npc = "center", label.y.npc = 1.0, size = 3
+    label.x.npc = "center", label.y.npc = 1.0, size = 4
   ) +
   facet_wrap(~ Trait, scales = "free_y") +
   scale_color_manual(values = period_colors) +
   scale_x_continuous(breaks = 1:4, labels = c("LF", "LF/MH", "MH", "LIP")) +
   labs(
     x = "Time Period", y = "Trait Value",
-    title = "Linear Regression of Cupule Characteristics Across Time Periods"
+    title = "B. Linear Regression of Cupule Characteristics Across Time Periods"
   ) +
   theme_minimal() +
   theme(
-    strip.text = element_text(size = 12, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 18),
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    axis.title = element_text(size = 16),                       # Axis titles
+    axis.text = element_text(size = 14),                        # Axis tick labels
+    legend.title = element_text(size = 16),                     # Legend title
+    legend.text = element_text(size = 14),   
     panel.grid = element_blank()
   )
 
 
+#Save
+ggsave("Linear_Regression_Cupule_Characteristics.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
   
 
 
-# PCA ---------------------------------------------------------------------
+# PCA FIGURE FOR PUB ---------------------------------------------------------------------
 
 
 # By Site
@@ -1970,6 +2107,29 @@ ggplot(trait_scores, aes(x = PC1, y = PC2)) +
        x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
        y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)"))
 
+# FIG FOR PUB - PCA AS SYMBOLS
+ggplot(trait_scores, aes(x = PC1, y = PC2)) +
+  geom_point(aes(shape = Trait), size = 4) +
+  geom_text(aes(label = Trait), vjust = -0.8, size = 5) +
+  scale_shape_manual(values = c(15, 16, 17, 18, 3, 4, 8)) +  # Customize as needed
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    plot.title = element_text(size = 18),        # Main title size
+    axis.title = element_text(size = 16),                       # Axis titles
+    axis.text = element_text(size = 14),                        # Axis tick labels
+    legend.title = element_text(size = 16),                     # Legend title
+    legend.text = element_text(size = 14)                       # Legend labels
+  ) +
+  labs(
+    title = "PCA of All Traits Across All Sites",
+    x = paste0("PC1 (", round(summary(pca_traits)$importance[2,1]*100, 1), "%)"),
+    y = paste0("PC2 (", round(summary(pca_traits)$importance[2,2]*100, 1), "%)")
+  )
+
+
+#Save
+ggsave("PCA_plot.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 # To view proportion of variance
 summary(pca_traits)
@@ -2106,9 +2266,17 @@ ggplot(pc_scores_labeled, aes(x = Site_label, y = PC1, fill = Period)) +
 # Define Chen Chen and Omo style groups
 pc_scores_labeled <- pc_scores_labeled %>%
 mutate(Style_Group = case_when(
-  Site %in% c("M1", "M43", "M43") ~ "Chen Chen",
+  Site %in% c("M1", "M43", "M10") ~ "Chen Chen",
   Site == "M12" ~ "Omo",
   TRUE ~ NA_character_
+  ))
+
+# FIX LABELS:
+pc_scores_labeled <- pc_scores_labeled %>%
+  mutate(Style_Group = case_when(
+    as.character(Site) %in% c("M1", "M43", "M10") ~ "Chen Chen",
+    as.character(Site) == "M12" ~ "Omo",
+    TRUE ~ NA_character_
   ))
 
 # Drop rows with NA in Style_Group
