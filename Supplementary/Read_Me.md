@@ -17,7 +17,7 @@ This folder contains supplementary statistics generated during the analysis of P
 - `Supplementary_MH_Traits_with_AllSites.xlsx` – Statistics between Middle Horizon sites.
 
 - `Supplementary_Omo_ChenChen_M10.xlsx` – Statistics between cultural styles in the Middle Horizon sites.
-- 
+  
 - `Supplementary_Plane_Outline` – Image of plane orientation for geometric morphometrics.
   
 - `Supplementary_LIP_Traits_with_AllSites.xlsx` – Statistics between Late Intermediate Period sites.
