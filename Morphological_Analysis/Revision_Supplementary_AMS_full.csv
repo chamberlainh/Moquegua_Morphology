@@ -1,0 +1,24 @@
+Site,Lab no. (UCIAMS-),Specimen ID,Sector,Unit,Level,Feature,Context,Culture,d13C (�),14C age (BP),"Calibrated 68.3% (intervals, probability)","Calibrated 95.4% (intervals, probability)"
+Tres Quebradas M73,302471,M73_1372_05,F,Ampl 1,5,,Pit burial,Huaracane,-8.5,2500 ± 15,751–684 BC (27.3%); 668–634 BC (12.0%); 620–614 BC (1.5%); 590–514 BC (24.5%); 498–488 BC (3.0%),758–678 BC (30.0%); 672–456 BC (60.2%); 444–416 BC (5.2%)
+Tres Quebradas M73,302488,M73_1330_04,F,3ampl.2b,2,20,Pit burial,Huaracane,-9.3,1895 ± 15,AD 127–186 (60.9%); AD 196–203 (7.4%),AD 119–216 (95.4%)
+Tres Quebradas M73,302470,M73_68_03,,,,98-4 Ent. 4 - Ind. A,Pit burial,Huaracane,-9.6,1775 ± 20,AD 252–300 (50.8%); AD 326–341 (14.5%); AD 354–357 (3.0%),AD 250–362 (95.4%)
+Cerro Trapiche M7,302472,M7_1593_47,C,1tt,2c,,Wari Structure 1,Huaracane/Wari,-10.1,1255 ± 20,AD 784–804 (18.9%); AD 810–816 (4.8%); AD 834–878 (44.5%),AD 772–885 (95.4%)
+Cerro Trapiche M7,302487,M7_1593_50,C,1tt,2c,,Wari Structure 1,Huaracane/Wari,-*,1200 ± 15,AD 884–896 (23.1%); AD 932–959 (45.2%),AD 771–784 (7.1%); AD 797–813 (3.2%); AD 876–903 (29.2%); AD 920–971 (55.9%)
+Cerro Trapiche M7,302486,M7_1490_35,C,1tt,3c,,Wari Structure 1,Huaracane/Wari,-10.5,1230 ± 15,AD 774–788 (16.8%); AD 796–811 (15.8%); AD 858–888 (35.6%),AD 771–820 (44.7%); AD 834–893 (50.7%)
+Rio Muerto M43,302481,M43_6385_01,F,6a,11,,"Domestic, subfloor",Tiwanaku,-9.5,1210 ± 15,AD 774–784 (12.6%); AD 878–894 (30.5%); AD 935–957 (25.2%),AD 771–815 (26.0%); AD 852–899 (37.9%); AD 926–965 (31.5%)
+Rio Muerto M43,302483,M43_6261_06,F,6a,3,,"Domestic, floor",Tiwanaku,-9.5,1195 ± 15,AD 886–897 (18.3%); AD 931–960 (49.9%),AD 772–784 (4.3%); AD 803–808 (0.8%); AD 878–904 (26.1%); AD 919–972 (64.3%)
+Chen Chen M1,302473,M1_124039_06,,5466,,,Domestic,Tiwanaku,-8.7,1185 ± 15,AD 890–897 (11.7%); AD 930–962 (56.6%),AD 884–906 (21.3%); AD 916–986 (74.1%)
+Rio Muerto M43,302479,M43_6385_02,F,6a,11,,"Domestic, subfloor",Tiwanaku,-9,1175 ± 15,AD 893–900 (9.9%); AD 924–967 (58.3%),AD 888–987 (95.4%)
+Rio Muerto M43,302480,M43_6385_10,F,6a,11,,"Domestic, subfloor",Tiwanaku,-9.3,1165 ± 15,AD 894–906 (15.3%); AD 916–938 (26.5%); AD 955–973 (22.5%); AD 982–986 (4.0%),AD 892–988 (95.4%)
+Rio Muerto M43,302482,M43_6174_07,F,6a,,22,Posthole,Tiwanaku,-9.1,1155 ± 20,AD 898–930 (39.2%); AD 962–987 (29.1%),AD 892–991 (95.4%)
+Rio Muerto M43,302476,M43_6503_06,F,6a,4a,,"Domestic, floor",Tiwanaku,-8.8,1135 ± 15,AD 903–920 (31.5%); AD 970–991 (36.8%),AD 896–932 (45.7%); AD 960–994 (47.0%); AD 1008–1015 (2.8%)
+Rio Muerto M43,302478,M43_6174_02,F,6a,,22,Posthole,Tiwanaku,-8.8,1130 ± 15,AD 903–920 (29.2%); AD 970–992 (39.1%),AD 897–930 (41.1%); AD 962–994 (47.4%); AD 1006–1018 (6.9%)
+Rio Muerto M43,302477,M43_6174_05,F,6a,,22,Posthole,Tiwanaku,-9.2,1095 ± 20,AD 993–1020 (68.3%),AD 906–916 (2.8%); AD 972–1026 (92.6%)
+Rio Muerto M43,302484,M43_6321_09,F,6a,5A,,"Domestic, floor",Tiwanaku,-9.5,1155 ± 15,AD 898–926 (40.9%); AD 964–986 (27.3%),AD 892–941 (53.7%); AD 952–992 (41.8%)
+Rio Muerto M43,302485,M43_6174_09,F,6a,,22,Posthole,Tiwanaku,-9.3,1100 ± 15,AD 992–996 (7.1%); AD 1002–1020 (61.1%),AD 973–1024 (95.4%)
+Omo M10,302475,M10_7942_17,W,712,2B,,Cemetery,Tiwanaku,-9.4,1195 ± 15,AD 886–897 (18.3%); AD 931–960 (49.9%),AD 772–784 (4.3%); AD 803–808 (0.8%); AD 878–904 (26.1%); AD 919–972 (64.3%)
+Omo M10,302474,M10_12744_02,A,270,,,Temple,Tiwanaku,-9.3,1020 ± 15,AD 1025–1046 (31.2%); AD 1088–1108 (23.5%); AD 1120–1133 (13.6%),AD 1022–1050 (36.3%); AD 1082–1146 (59.2%)
+Cerro Chamos M44,302489,M44_1031_65,C,2 Terraza 2,2,16,"Domestic, terrace",Tumilaca,-10.4,950 ± 15,AD 1052–1082 (34.2%); AD 1148–1162 (20.1%); AD 1168–1180 (13.9%),AD 1046–1089 (42.2%); AD 1106–1188 (51.0%); AD 1196–1210 (2.2%)
+,,,,,,,,,,,,
+Calibrated with OxCal v4.4 (Bronk Ramsey 2009) and SHCal20 (Hogg et al. 2020). Ranges are highest posterior density intervals; separate intervals listed with their probability.,,,,,,,,,,,,
+"* UCIAMS-302487 was too small for an EA-IRMS aliquot; no δ13C reported. δ13C measured by EA-IRMS on pretreated material (UCIAMS report, 29 Dec 2024), rounded to 0.1‰.",,,,,,,,,,,,
