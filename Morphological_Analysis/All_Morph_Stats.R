@@ -28,7 +28,7 @@ setwd("C:/Users/chamb/OneDrive/Documents/Moquegua_Morphology/Morphological_Analy
 
 # Define file path
 
-file_data <- "Merged_Ancient_Maize_Cob_Data_Sheet.csv"
+file_data <- "Merged_Ancient_Maize_Cob_Data_Sheet_with_IDs.csv"
 
 # Read the CSV into a data frame
 maize_data <- read_csv(file_data)
@@ -752,7 +752,7 @@ ggplot(maize_data, aes(x = Site, y = Total_Wt_g)) +
 # Look at M7 for LF/MH Wari transition ----------------------------------------------------------------
 
 maize_data <- maize_data %>%
-  filter(Site != "M44") %>%  # Exclude M44
+  filter(Site != "M44", "M11") %>%  # Exclude M44 AND M11
   mutate(
     Cultural_Period = case_when(
       Site %in% c("M73", "M103") ~ "Early_Huaracane",
@@ -2335,7 +2335,7 @@ write_xlsx(
 
 # AMS Dates ---------------------------------------------------
 
-ams_dates <- read_csv("AMS_Dates_Final.csv")
+ams_dates <- read_csv("Revision_Supplementary_AMS_full.csv") # updated to latest version
 
 
 maize_dated <- maize_data %>%
