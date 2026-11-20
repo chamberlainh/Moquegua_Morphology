@@ -235,6 +235,13 @@ morphology_data <- maize_data %>%
                 `Mean_Cupule_Width(mm)`, `Mean_cupule_height(mm)`,
                 Mean_kernel_row, Total_Wt_g)
 
+
+morphology_data <- maize_data %>%
+  dplyr::select(Site, Length_mm, Diameter_mm, Cupule_number,
+                `Mean_Cupule_Width(mm)`, `Mean_cupule_height(mm)`,
+                Mean_kernel_row, Total_Wt_g) %>%
+  filter(complete.cases(.))   # same 344 cobs as all tests
+
 # Then pivot
 morphology_long <- morphology_data %>%
   pivot_longer(cols = -Site, names_to = "Trait", values_to = "Value")
@@ -2759,3 +2766,20 @@ fig4 <- cc_data %>%
   theme_bw()
 print(fig4)
 ggsave("Figure4_traits_by_period.png", fig4, width = 9, height = 7, dpi = 300)
+
+## Update Table 2 for summary stats
+cc <- maize_data %>%
+  dplyr::select(Period, Length_mm, Diameter_mm, Cupule_number,
+                `Mean_Cupule_Width(mm)`, `Mean_cupule_height(mm)`,
+                Mean_kernel_row, Total_Wt_g) %>%
+  filter(complete.cases(.))
+
+tab2 <- bind_rows(cc %>% mutate(Period = "All"), cc) %>%
+  pivot_longer(-Period, names_to = "Trait", values_to = "Value") %>%
+  group_by(Trait, Period) %>%
+  summarise(N = n(),
+            Mean_SD = sprintf("%.2f ± %.2f", mean(Value), sd(Value)),
+            Range = sprintf("%.2f–%.2f", min(Value), max(Value)),
+            .groups = "drop")
+print(tab2, n = Inf)
+write_xlsx(tab2, "Table2_Summary_by_Period_344.xlsx")
