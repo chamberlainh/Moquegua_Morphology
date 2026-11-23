@@ -40,6 +40,8 @@
 #     correction it would have removed a valid cob). Fixed axis limits removed.
 # Data corrections are in the datasheet itself (M43_6261_03 length/diameter swap;
 # M103_1161_30 diameter 0.05 -> 5.0, to verify against in-person measurement).
+# Mean_kernel_row = kernel row number: mean count of cupule (kernel) rows around the cob, top/middle/bottom (Table 2 note 1). Not kernels per row.
+
 # =============================================================================
 
 ## Stats for ALL Morphology Traits
