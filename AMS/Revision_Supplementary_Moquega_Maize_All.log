@@ -1,0 +1,159 @@
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Reimer et al (2020)
+"shcal20.14c"
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Hogg et al (2020)
+M73_1372_05 R_Date(2500,15)
+  68.3% probability
+    751BC (27.3%) 684BC
+    668BC (12.0%) 634BC
+    620BC ( 1.5%) 614BC
+    590BC (24.5%) 514BC
+    498BC ( 3.0%) 488BC
+  95.4% probability
+    758BC (30.0%) 678BC
+    672BC (60.2%) 456BC
+    444BC ( 5.2%) 416BC
+M73_1330_04 R_Date(1895,15)
+  68.3% probability
+    127AD (60.9%) 186AD
+    196AD ( 7.4%) 203AD
+  95.4% probability
+    119AD (95.4%) 216AD
+M73_68_03 R_Date(1775,20)
+  68.3% probability
+    252AD (50.8%) 300AD
+    326AD (14.5%) 341AD
+    354AD ( 3.0%) 357AD
+  95.4% probability
+    250AD (95.4%) 362AD
+M7_1593_47 R_Date(1255,20)
+  68.3% probability
+    784AD (18.9%) 804AD
+    810AD ( 4.8%) 816AD
+    834AD (44.5%) 878AD
+  95.4% probability
+    772AD (95.4%) 885AD
+M7_1593_50 R_Date(1200,15)
+  68.3% probability
+    884AD (23.1%) 896AD
+    932AD (45.2%) 959AD
+  95.4% probability
+    771AD ( 7.1%) 784AD
+    797AD ( 3.2%) 813AD
+    876AD (29.2%) 903AD
+    920AD (55.9%) 971AD
+M7_1490_35 R_Date(1230,15)
+  68.3% probability
+    774AD (16.8%) 788AD
+    796AD (15.8%) 811AD
+    858AD (35.6%) 888AD
+  95.4% probability
+    771AD (44.7%) 820AD
+    834AD (50.7%) 893AD
+M43_6385_01 R_Date(1210,15)
+  68.3% probability
+    774AD (12.6%) 784AD
+    878AD (30.5%) 894AD
+    935AD (25.2%) 957AD
+  95.4% probability
+    771AD (26.0%) 815AD
+    852AD (37.9%) 899AD
+    926AD (31.5%) 965AD
+M43_6385_02 R_Date(1175,15)
+  68.3% probability
+    893AD ( 9.9%) 900AD
+    924AD (58.3%) 967AD
+  95.4% probability
+    888AD (95.4%) 987AD
+M43_6385_10 R_Date(1165,15)
+  68.3% probability
+    894AD (15.3%) 906AD
+    916AD (26.5%) 938AD
+    955AD (22.5%) 973AD
+    982AD ( 4.0%) 986AD
+  95.4% probability
+    892AD (95.4%) 988AD
+M43_6261_06 R_Date(1195,15)
+  68.3% probability
+    886AD (18.3%) 897AD
+    931AD (49.9%) 960AD
+  95.4% probability
+    772AD ( 4.3%) 784AD
+    803AD ( 0.8%) 808AD
+    878AD (26.1%) 904AD
+    919AD (64.3%) 972AD
+M43_6321_09 R_Date(1155,15)
+  68.3% probability
+    898AD (40.9%) 926AD
+    964AD (27.3%) 986AD
+  95.4% probability
+    892AD (53.7%) 941AD
+    952AD (41.8%) 992AD
+M43_6503_06 R_Date(1135,15)
+  68.3% probability
+    903AD (31.5%) 920AD
+    970AD (36.8%) 991AD
+  95.4% probability
+    896AD (45.7%) 932AD
+    960AD (47.0%) 994AD
+    1008AD ( 2.8%) 1015AD
+M43_6174_02 R_Date(1130,15)
+  68.3% probability
+    903AD (29.2%) 920AD
+    970AD (39.1%) 992AD
+  95.4% probability
+    897AD (41.1%) 930AD
+    962AD (47.4%) 994AD
+    1006AD ( 6.9%) 1018AD
+M43_6174_05 R_Date(1095,20)
+  68.3% probability
+    993AD (68.3%) 1020AD
+  95.4% probability
+    906AD ( 2.8%) 916AD
+    972AD (92.6%) 1026AD
+M43_6174_07 R_Date(1155,20)
+  68.3% probability
+    898AD (39.2%) 930AD
+    962AD (29.1%) 987AD
+  95.4% probability
+    892AD (95.4%) 991AD
+M43_6174_09 R_Date(1100,15)
+  68.3% probability
+    992AD ( 7.1%) 996AD
+    1002AD (61.1%) 1020AD
+  95.4% probability
+    973AD (95.4%) 1024AD
+M1_124039_06 R_Date(1185,15)
+  68.3% probability
+    890AD (11.7%) 897AD
+    930AD (56.6%) 962AD
+  95.4% probability
+    884AD (21.3%) 906AD
+    916AD (74.1%) 986AD
+M10_7942_17 R_Date(1195,15)
+  68.3% probability
+    886AD (18.3%) 897AD
+    931AD (49.9%) 960AD
+  95.4% probability
+    772AD ( 4.3%) 784AD
+    803AD ( 0.8%) 808AD
+    878AD (26.1%) 904AD
+    919AD (64.3%) 972AD
+M10_12744_02 R_Date(1020,15)
+  68.3% probability
+    1025AD (31.2%) 1046AD
+    1088AD (23.5%) 1108AD
+    1120AD (13.6%) 1133AD
+  95.4% probability
+    1022AD (36.3%) 1050AD
+    1082AD (59.2%) 1146AD
+M44_1031_65 R_Date(950,15)
+  68.3% probability
+    1052AD (34.2%) 1082AD
+    1148AD (20.1%) 1162AD
+    1168AD (13.9%) 1180AD
+  95.4% probability
+    1046AD (42.2%) 1089AD
+    1106AD (51.0%) 1188AD
+    1196AD ( 2.2%) 1210AD
