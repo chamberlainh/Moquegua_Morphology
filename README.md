@@ -16,7 +16,7 @@ This folder contains R project, R script, and data files for morphological analy
 
 ### Visuals
 
-This folder contains all the generated visuals from Permit 1 and Permit 1 and 2 exploration.
+This folder contains all the generated visuals from Permits 1 and 2.
 
 ## Citation
 

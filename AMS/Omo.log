@@ -1,0 +1,69 @@
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Reimer et al (2020)
+"shcal20.14c"
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Hogg et al (2020)
+Start Boundary()
+O7942_17 R_Date(1195,15)
+  68.3% probability
+    886AD (18.3%) 897AD
+    931AD (49.9%) 960AD
+  95.4% probability
+    772AD ( 4.3%) 784AD
+    803AD ( 0.8%) 808AD
+    878AD (26.1%) 904AD
+    919AD (64.3%) 972AD
+O12744_02 R_Date(1020,15)
+  68.3% probability
+    1025AD (31.2%) 1046AD
+    1088AD (23.5%) 1108AD
+    1120AD (13.6%) 1133AD
+  95.4% probability
+    1022AD (36.3%) 1050AD
+    1082AD (59.2%) 1146AD
+( Phase MH
+MH Phase()
+) Phase MH
+End Boundary()
+( Sequence Omo
+Omo Sequence()
+) Sequence Omo
+Posterior 
+( MCMC(30000)
+Overall agreement 103.9%
+Dynamic agreement 103.9%
+Start Posterior 
+  68.3% probability
+    690AD (68.3%) 961AD
+  95.4% probability
+    162AD ( 8.3%) 316AD
+    322AD ( 0.3%) 328AD
+    336AD ( 0.6%) 348AD
+    375AD ( 0.2%) 378AD
+    401AD ( 1.5%) 436AD
+    442AD (84.7%) 965AD
+O7942_17 Posterior 
+  68.3% probability
+    888AD ( 8.1%) 894AD
+    932AD (60.1%) 962AD
+  95.4% probability
+    880AD (19.7%) 904AD
+    920AD (75.7%) 985AD
+ Agreement 101.0%
+O12744_02 Posterior 
+  68.3% probability
+    1022AD (49.6%) 1048AD
+    1088AD (18.7%) 1106AD
+  95.4% probability
+    1020AD (51.4%) 1054AD
+    1081AD (44.1%) 1146AD
+ Agreement 104.6%
+End Posterior 
+  68.3% probability
+    1028AD (68.3%) 1292AD
+  95.4% probability
+    1026AD (88.3%) 1538AD
+    1562AD ( 0.3%) 1566AD
+    1598AD ( 1.0%) 1616AD
+    1630AD ( 5.8%) 1712AD
+) MCMC(240000)

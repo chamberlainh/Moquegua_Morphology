@@ -1,0 +1,190 @@
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Reimer et al (2020)
+"shcal20.14c"
+TRUE
+TRUE
+OxCal v4.4.4 Bronk Ramsey (2021); r:5
+Atmospheric data from Hogg et al (2020)
+Sterile Boundary()
+R6385_01 R_Date(1210,15)
+  68.3% probability
+    774AD (12.6%) 784AD
+    878AD (30.5%) 894AD
+    935AD (25.2%) 957AD
+  95.4% probability
+    771AD (26.0%) 815AD
+    852AD (37.9%) 899AD
+    926AD (31.5%) 965AD
+R6385_02 R_Date(1175,15)
+  68.3% probability
+    893AD ( 9.9%) 900AD
+    924AD (58.3%) 967AD
+  95.4% probability
+    888AD (95.4%) 987AD
+R6385_10 R_Date(1165,15)
+  68.3% probability
+    894AD (15.3%) 906AD
+    916AD (26.5%) 938AD
+    955AD (22.5%) 973AD
+    982AD ( 4.0%) 986AD
+  95.4% probability
+    892AD (95.4%) 988AD
+( Phase Nivel 11
+Nivel 11 Phase()
+) Phase Nivel 11
+Floor Boundary()
+R6321_09 R_Date(1155,15)
+  68.3% probability
+    898AD (40.9%) 926AD
+    964AD (27.3%) 986AD
+  95.4% probability
+    892AD (53.7%) 941AD
+    952AD (41.8%) 992AD
+R6503_06 R_Date(1135,15)
+  68.3% probability
+    903AD (31.5%) 920AD
+    970AD (36.8%) 991AD
+  95.4% probability
+    896AD (45.7%) 932AD
+    960AD (47.0%) 994AD
+    1008AD ( 2.8%) 1015AD
+R6261_06 R_Date(1195,15)
+  68.3% probability
+    886AD (18.3%) 897AD
+    931AD (49.9%) 960AD
+  95.4% probability
+    772AD ( 4.3%) 784AD
+    803AD ( 0.8%) 808AD
+    878AD (26.1%) 904AD
+    919AD (64.3%) 972AD
+( Phase Upper Levels
+Upper Levels Phase()
+) Phase Upper Levels
+Posthole Feature Boundary()
+R6174_07 R_Date(1155,20)
+  68.3% probability
+    898AD (39.2%) 930AD
+    962AD (29.1%) 987AD
+  95.4% probability
+    892AD (95.4%) 991AD
+R6174_02 R_Date(1130,15)
+  68.3% probability
+    903AD (29.2%) 920AD
+    970AD (39.1%) 992AD
+  95.4% probability
+    897AD (41.1%) 930AD
+    962AD (47.4%) 994AD
+    1006AD ( 6.9%) 1018AD
+R6174_09 R_Date(1100,15)
+  68.3% probability
+    992AD ( 7.1%) 996AD
+    1002AD (61.1%) 1020AD
+  95.4% probability
+    973AD (95.4%) 1024AD
+R6174_05 R_Date(1095,20)
+  68.3% probability
+    993AD (68.3%) 1020AD
+  95.4% probability
+    906AD ( 2.8%) 916AD
+    972AD (92.6%) 1026AD
+( Phase Rasgo 22
+Rasgo 22 Phase()
+) Phase Rasgo 22
+End Deposit Boundary()
+( Sequence RMM43F
+RMM43F Sequence()
+) Sequence RMM43F
+i : Using logs - local probility low
+Posterior 
+( MCMC(30000)
+Overall agreement  68.5%
+Dynamic agreement  67.7%
+Sterile Posterior 
+  68.3% probability
+    886AD ( 4.6%) 891AD
+    918AD (63.7%) 960AD
+  95.4% probability
+    862AD (95.4%) 966AD
+R6385_01 Posterior 
+  68.3% probability
+    934AD (68.3%) 960AD
+  95.4% probability
+    880AD (15.8%) 899AD
+    926AD (79.7%) 968AD
+ Agreement  85.2%
+R6385_02 Posterior 
+  68.3% probability
+    930AD (68.3%) 963AD
+  95.4% probability
+    888AD (13.7%) 905AD
+    918AD (81.8%) 969AD
+ Agreement 110.9%
+R6385_10 Posterior 
+  68.3% probability
+    928AD (68.3%) 964AD
+  95.4% probability
+    890AD (95.4%) 970AD
+ Agreement  94.3%
+Floor Posterior 
+  68.3% probability
+    940AD (68.3%) 970AD
+  95.4% probability
+    892AD ( 8.9%) 912AD
+    928AD (86.5%) 980AD
+R6321_09 Posterior 
+  68.3% probability
+    958AD (68.3%) 980AD
+  95.4% probability
+    900AD ( 6.9%) 934AD
+    942AD (88.5%) 990AD
+ Agreement  99.5%
+R6503_06 Posterior 
+  68.3% probability
+    962AD (68.3%) 982AD
+  95.4% probability
+    902AD ( 6.9%) 925AD
+    952AD (88.6%) 990AD
+ Agreement  87.0%
+R6261_06 Posterior 
+  68.3% probability
+    950AD (68.3%) 972AD
+  95.4% probability
+    932AD (95.4%) 986AD
+ Agreement  70.5%
+Posthole Feature Posterior 
+  68.3% probability
+    969AD (68.3%) 988AD
+  95.4% probability
+    946AD (95.4%) 995AD
+R6174_07 Posterior 
+  68.3% probability
+    979AD (68.3%) 992AD
+  95.4% probability
+    962AD (93.1%) 995AD
+    1006AD ( 2.3%) 1015AD
+ Agreement  93.1%
+R6174_02 Posterior 
+  68.3% probability
+    978AD (68.3%) 994AD
+  95.4% probability
+    968AD (89.7%) 997AD
+    1006AD ( 5.7%) 1016AD
+ Agreement 112.2%
+R6174_09 Posterior 
+  68.3% probability
+    986AD (68.3%) 1012AD
+  95.4% probability
+    974AD (95.4%) 1018AD
+ Agreement  68.2%
+R6174_05 Posterior 
+  68.3% probability
+    986AD (68.3%) 1008AD
+  95.4% probability
+    972AD (95.4%) 1019AD
+ Agreement  78.2%
+End Deposit Posterior 
+  68.3% probability
+    988AD (68.3%) 1018AD
+  95.4% probability
+    974AD (95.4%) 1044AD
+) MCMC(480000)
