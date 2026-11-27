@@ -41,6 +41,19 @@
 # Data corrections are in the datasheet itself (M43_6261_03 length/diameter swap;
 # M103_1161_30 diameter 0.05 -> 5.0, to verify against in-person measurement).
 # Mean_kernel_row = kernel row number: mean count of cupule (kernel) rows around the cob, top/middle/bottom (Table 2 note 1). Not kernels per row.
+# REVISION 27-Nov (figures); marked "# FIGURES 27-Nov":
+# 20. One set of figure settings (FIGURE SETTINGS block below): period colours (colour-blind
+#     safe), trait names and order as in Table 2, one theme, no titles inside the plots
+#     (titles go in the captions), one export function.
+# 21. Colour means period in every figure. Figures 7-8 (MH sites) use the MH colour; site is
+#     on the x-axis, so the site legend was dropped.
+# 22. Figure 3 (PCA) and Figure 5 (CDA) redrawn in ggplot with readable trait names and
+#     non-overlapping labels. Figure 3 flips PC1 for display only, so larger cobs plot to the
+#     right; the PCA object, its supplement and the Chen Chen vs Omo test are unchanged.
+# 23. p-values in Figures 7-8 come from one-way ANOVA per trait on the same 297 cobs as the
+#     MH MANOVA, shown as "p < 0.001" when small.
+# 24. Exploratory plots that are not in the paper are switched off with
+#     SHOW_EXPLORATORY <- FALSE (set to TRUE to draw them again). No analysis was changed.
 
 # =============================================================================
 
@@ -74,6 +87,43 @@ library(multcomp)
 select <- dplyr::select
 filter <- dplyr::filter
 recode <- dplyr::recode
+
+# FIGURE SETTINGS (FIGURES 27-Nov) ---------------------------------------------
+if (!requireNamespace("ggrepel", quietly = TRUE)) install.packages("ggrepel")
+library(ggrepel)
+
+SHOW_EXPLORATORY <- FALSE   # TRUE = also draw the exploratory plots not used in the paper
+
+period_levels <- c("LF", "LF/MH", "MH", "LIP")
+period_cols   <- c("LF" = "#E69F00", "LF/MH" = "#56B4E9", "MH" = "#009E73", "LIP" = "#CC79A7")  # Okabe-Ito
+site_levels   <- c("M73", "M103", "M7", "M43", "M10", "M1", "M12", "M11", "M44")
+
+# Trait names and order used in every figure (same wording and order as Table 2)
+fig_trait_labels <- c(
+  "Length_mm"              = "Length (mm)",
+  "Diameter_mm"            = "Diameter (mm)",
+  "Total_Wt_g"             = "Weight (g)",
+  "Cupule_number"          = "Cupule number",
+  "Mean_kernel_row"        = "Kernel row number",
+  "Mean_Cupule_Width(mm)"  = "Cupule width (mm)",
+  "Mean_cupule_height(mm)" = "Cupule height (mm)"
+)
+fig_trait_order <- unname(fig_trait_labels)
+
+theme_maize <- theme_bw(base_size = 11) +
+  theme(panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        legend.key = element_blank())
+
+# One export size for the whole set (7 in = double-column width). Check the journal's
+# figure instructions and change width/format here only.
+save_fig <- function(plot, file, width = 7, height = 5) {
+  ggsave(file, plot, width = width, height = height, dpi = 300)
+}
+
+# p-value label used on the figures
+p_label <- function(p) ifelse(p < 0.001, "p < 0.001", paste0("p = ", signif(p, 2)))
 
 # Set working directory
 setwd("C:/Users/chamb/OneDrive/Documents/Moquegua_Morphology/Morphological_Analysis")
@@ -599,222 +649,134 @@ write_xlsx(
 
 
 
-# Plot MH Traits Across Sites NEED TO FIX
-
-# 1. Define label replacements
-trait_labels <- c(
-  "Cupule_number" = "Cupule Number",
-  "Mean_Cupule_Width(mm)" = "Cupule Width (mm)",
-  "Mean_cupule_height(mm)" = "Cupule Height (mm)",
-  "Mean_kernel_row" = "Kernel Rows",
-  "Length_mm" = "Length (mm)",
-  "Diameter_mm" = "Diameter (mm)",
-  "Total_Wt_g" = "Total Weight (g)"
-)
-
-# 2. Reshape data
+# Figures 7 and 8: MH sites (FIGURES 27-Nov) -----------------------------------
+# Same 297 complete-case cobs as the MH MANOVA (morph_data_mh). Boxes in the MH colour;
+# p-values = one-way ANOVA per trait (match the univariate F tests in the Results).
 mh_long <- morph_data_mh %>%
   pivot_longer(cols = all_of(traits), names_to = "Trait", values_to = "Value") %>%
-  mutate(
-    Site = factor(Site),
-    Trait = dplyr::recode(Trait, !!!trait_labels)
-  )
+  mutate(Site  = factor(as.character(Site), levels = intersect(site_levels, unique(as.character(Site)))),
+         Trait = factor(fig_trait_labels[Trait], levels = fig_trait_order))
 
-# 3. Prepare p-values
-pval_df <- tukey_mh_df %>%
-  separate(Comparison, into = c("group1", "group2"), sep = "-") %>%
-  mutate(Trait = dplyr::recode(Trait, !!!trait_labels)) %>%
-  rename(p = `p adj`) %>%
-  left_join(
-    mh_long %>%
-      group_by(Trait) %>%
-      summarise(y.position = max(Value, na.rm = TRUE) * 1.1),
-    by = "Trait"
-  )
+mh_p <- mh_long %>%
+  group_by(Trait) %>%
+  summarise(p = anova(lm(Value ~ Site))$`Pr(>F)`[1], .groups = "drop") %>%
+  mutate(label = p_label(p))
 
-pval_df <- pval_df %>%
-  mutate(p = formatC(p, format = "e", digits = 2))  # scientific notation, or use `round(p, 3)
+mh_fig <- function(trait_set) {
+  d <- filter(mh_long, Trait %in% trait_set)
+  ggplot(d, aes(Site, Value)) +
+    geom_boxplot(outlier.shape = NA, fill = period_cols["MH"], alpha = 0.6) +
+    geom_jitter(width = 0.15, alpha = 0.3, size = 0.8) +
+    geom_text(data = filter(mh_p, Trait %in% trait_set), aes(x = -Inf, y = Inf, label = label),
+              hjust = -0.1, vjust = 1.5, size = 3.2, inherit.aes = FALSE) +
+    scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +   # room for the p-value
+    facet_wrap(~ Trait, scales = "free_y", nrow = 1) +
+    labs(x = NULL, y = NULL) +
+    theme_maize
+}
 
-# Plot with P's
-mh_long <- mh_long %>%
-  mutate(Trait = factor(
-    Trait,
-    levels = c(
-      "Diameter (mm)",
-      "Length (mm)",
-      "Total Weight (g)",
-      "Cupule Height (mm)",
-      "Cupule Number",
-      "Cupule Width (mm)",
-      "Kernel Rows"
-    )
-  ))
+fig7 <- mh_fig(c("Length (mm)", "Diameter (mm)", "Weight (g)"))
+print(fig7)
+save_fig(fig7, "Figure7_Cob_Dimensions_MH.png", height = 3.5)
 
-
-ggplot(mh_long, aes(x = Site, y = Value, fill = Site)) +
-  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
-  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
-  geom_blank(aes(y = Value * 1.15)) +  # Adds extra headroom for p-values
-  facet_wrap(~ Trait, scales = "free_y") +
-  stat_compare_means(method = "anova", label = "p.format", size = 3) +  # Smaller p-value text
-  labs(
-    title = "Morphological Trait Variation Across MH Sites",
-    x = "Site", y = "Trait Value"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    strip.text = element_text(face = "bold"),
-    panel.grid = element_blank(),
-    legend.position = "none"
-  )
-
-
-# Split MH Plots into Cobs and Cupule Characteristics FIG FOR PUB
-# Define trait groupings
-cob_traits <- c("Length (mm)", "Diameter (mm)", "Total Weight (g)")
-cupule_traits <- c("Cupule Number", "Cupule Width (mm)", "Cupule Height (mm)", "Kernel Rows")
-
-ggplot(filter(mh_long, Trait %in% cob_traits), aes(x = Site, y = Value, fill = Site)) +
-  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
-  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
-  geom_blank(aes(y = Value * 1.15)) +
-  facet_wrap(~ Trait, scales = "free_y") +
-  stat_compare_means(method = "anova", label = "p.format", size = 4) +
-  labs(
-    title = "A. Cob Dimensions Across MH Sites",
-    x = "Site", y = "Trait Value"
-  ) +
-  theme_minimal() +
-  theme(
-    strip.text = element_text(size = 14, face = "bold"),
-    plot.title = element_text(size = 18),
-    axis.text.x = element_text(angle = 45, hjust = 1), 
-    axis.title = element_text(size = 16),                       # Axis titles
-    axis.text = element_text(size = 14),                        # Axis tick labels
-    legend.title = element_text(size = 16),                     # Legend title
-    legend.text = element_text(size = 14),   
-    panel.grid = element_blank()
-  )
-
-#Save
-ggsave("Figure7_Cob_Dimensions_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
-
-ggplot(filter(mh_long, Trait %in% cupule_traits), aes(x = Site, y = Value, fill = Site)) +
-  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
-  geom_jitter(width = 0.2, alpha = 0.3, color = "black") +
-  geom_blank(aes(y = Value * 1.15)) +
-  facet_wrap(~ Trait, scales = "free_y") +
-  stat_compare_means(method = "anova", label = "p.format", size = 4) +
-  labs(
-    title = "B. Cupule Characteristics Across MH Sites",
-    x = "Site", y = "Trait Value"
-  ) +
-  theme_minimal() +
-  theme(
-    strip.text = element_text(size = 14, face = "bold"),
-    plot.title = element_text(size = 18),
-    axis.text.x = element_text(angle = 45, hjust = 1), 
-    axis.title = element_text(size = 16),                       # Axis titles
-    axis.text = element_text(size = 14),                        # Axis tick labels
-    legend.title = element_text(size = 16),                     # Legend title
-    legend.text = element_text(size = 14),   
-    panel.grid = element_blank()
-  )
-
-#Save
-ggsave("Figure8_Cupule_Characteristics_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
+fig8 <- mh_fig(c("Cupule number", "Kernel row number", "Cupule width (mm)", "Cupule height (mm)"))
+print(fig8)
+save_fig(fig8, "Figure8_Cupule_Characteristics_MH.png", height = 3.5)
 
 
 
 
 
-# Plot individual anovas for stat_compare_means
-
-# Cob Length
-ggplot(maize_data, aes(x = Site, y = Length_mm)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Length_mm, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Cob Length (mm) by Site")
-
-# Cob Diameter
-ggplot(maize_data, aes(x = Site, y = Diameter_mm)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Diameter_mm, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Cob Diameter (mm) by Site")
-
-# Cupule Number
-ggplot(maize_data, aes(x = Site, y = Cupule_number)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Cupule_number, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Cupule Number (circumference) by Site")
-
-# Cupule Width
-ggplot(maize_data, aes(x = Site, y = `Mean_Cupule_Width(mm)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$`Mean_Cupule_Width(mm)`, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Mean Cupule Width (mm) by Site")
-
-# Cupule Height
-ggplot(maize_data, aes(x = Site, y = `Mean_cupule_height(mm)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$`Mean_cupule_height(mm)`, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Mean Cupule Height (mm) by Site")
-
-
-# cupule surface area
+# cupule surface area (kept outside the exploratory block: used later)
 maize_data$Surface_Area <- maize_data$`Mean_Cupule_Width(mm)` * maize_data$`Mean_cupule_height(mm)`
-
-
-# Surface Area by Site
-ggplot(maize_data, aes(x = Site, y = Surface_Area)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Surface_Area, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Cupule Surface Area (mm^2) by Site") +
-  ylab("Surface Area (mm²)")
-
-
-# Calculate counts per site
-site_counts <- maize_data %>%
-  group_by(Site) %>%
-  summarise(n = n())
-
-# Merge counts back into the main data for plotting
-maize_data_with_counts <- maize_data %>%
-  left_join(site_counts, by = "Site")
-
-# Plot with counts
-ggplot(maize_data_with_counts, aes(x = Site, y = Length_mm)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data_with_counts$Length_mm, na.rm = TRUE)) +
-  geom_text(data = site_counts, aes(x = Site, y = 0, label = paste0("n=", n)), vjust = 1.5, size = 3) +
-  theme_bw() +
-  ggtitle("Cob Length (mm) by Site") +
-  ylab("Length (mm)")
-
-
-
-
-# Mean Kernel Row Number
-ggplot(maize_data, aes(x = Site, y = Mean_kernel_row)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Mean_kernel_row, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Mean Kernel Row Number by Site")
-
-# Weight
-ggplot(maize_data, aes(x = Site, y = Total_Wt_g)) +
-  geom_boxplot() +
-  stat_compare_means(method = "anova", label.y = max(maize_data$Total_Wt_g, na.rm = TRUE)) +
-  theme_bw() +
-  ggtitle("Cob Weight (g) by Site")
-
+# FIGURES 27-Nov: exploratory plots, not in the paper (individual ANOVA boxplots by site)
+if (SHOW_EXPLORATORY) {
+  # Plot individual anovas for stat_compare_means
+  
+  # Cob Length
+  ggplot(maize_data, aes(x = Site, y = Length_mm)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Length_mm, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Cob Length (mm) by Site")
+  
+  # Cob Diameter
+  ggplot(maize_data, aes(x = Site, y = Diameter_mm)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Diameter_mm, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Cob Diameter (mm) by Site")
+  
+  # Cupule Number
+  ggplot(maize_data, aes(x = Site, y = Cupule_number)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Cupule_number, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Cupule Number (circumference) by Site")
+  
+  # Cupule Width
+  ggplot(maize_data, aes(x = Site, y = `Mean_Cupule_Width(mm)`)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$`Mean_Cupule_Width(mm)`, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Mean Cupule Width (mm) by Site")
+  
+  # Cupule Height
+  ggplot(maize_data, aes(x = Site, y = `Mean_cupule_height(mm)`)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$`Mean_cupule_height(mm)`, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Mean Cupule Height (mm) by Site")
+  
+  
+  # cupule surface area
+  
+  
+  # Surface Area by Site
+  ggplot(maize_data, aes(x = Site, y = Surface_Area)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Surface_Area, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Cupule Surface Area (mm^2) by Site") +
+    ylab("Surface Area (mm²)")
+  
+  
+  # Calculate counts per site
+  site_counts <- maize_data %>%
+    group_by(Site) %>%
+    summarise(n = n())
+  
+  # Merge counts back into the main data for plotting
+  maize_data_with_counts <- maize_data %>%
+    left_join(site_counts, by = "Site")
+  
+  # Plot with counts
+  ggplot(maize_data_with_counts, aes(x = Site, y = Length_mm)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data_with_counts$Length_mm, na.rm = TRUE)) +
+    geom_text(data = site_counts, aes(x = Site, y = 0, label = paste0("n=", n)), vjust = 1.5, size = 3) +
+    theme_bw() +
+    ggtitle("Cob Length (mm) by Site") +
+    ylab("Length (mm)")
+  
+  
+  
+  
+  # Mean Kernel Row Number
+  ggplot(maize_data, aes(x = Site, y = Mean_kernel_row)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Mean_kernel_row, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Mean Kernel Row Number by Site")
+  
+  # Weight
+  ggplot(maize_data, aes(x = Site, y = Total_Wt_g)) +
+    geom_boxplot() +
+    stat_compare_means(method = "anova", label.y = max(maize_data$Total_Wt_g, na.rm = TRUE)) +
+    theme_bw() +
+    ggtitle("Cob Weight (g) by Site")
+  
+}  # end exploratory block
 
 
 
@@ -940,80 +902,83 @@ cda <- candisc(manova_model)
 head(cda$scores)
 
 
-# TEST FOR PUB
-while (dev.cur() > 1) dev.off()
-
-# Extract scores and manually add the Site info
-# Extract the model frame used in MANOVA
-model_data <- model.frame(manova_model)
-
-# Add Site to the CDA scores
-scores <- cda$scores
-scores$Site <- model_data$Site  # This will match row-for-row
-scores$Site <- as.factor(scores$Site)
-
-
-# Now safely get the levels
-site_levels <- levels(scores$Site)
-n_sites <- length(site_levels)
-
-# Colors and symbols
-colors <- 1:n_sites
-pch_vals <- 1:n_sites
-
-# Extract eigenvalues and compute proportion of variance
-eig_vals <- cda$eigenvalues
-var_explained <- eig_vals / sum(eig_vals) * 100
-
-# Round for display
-can1_percent <- round(var_explained[1], 1)
-can2_percent <- round(var_explained[2], 1)
-
-xlab <- paste0("Can1 (", can1_percent, "%)")
-ylab <- paste0("Can2 (", can2_percent, "%)")
-
-
-
-# FIX 22-Oct: title() was called before plot() existed; labels now passed to plot() below
-plot(
-  scores$Can1, scores$Can2,
-  col = colors[scores$Site],
-  pch = pch_vals[scores$Site],
-  xlab = xlab,  # FIX 22-Oct: was hard-coded "Can1 (74.2%)" from an older run
-  ylab = ylab,  # FIX 22-Oct: was hard-coded "Can2 (12.6%)"
-  main = "CDA Trait Differences Across Sites"
-)
-
-# Legend
-legend("topright",
-       legend = site_levels,
-       col = colors,
-       pch = pch_vals,
-       title = "Site",
-       cex = 0.8)
-
-# Extract trait loadings for the first two canonical dimensions
-trait_loadings <- cda$structure[, 1:2]
-# Scale loadings for visualization
-arrow_scale <- 5  # Adjust as needed
-trait_loadings_scaled <- trait_loadings * arrow_scale
-# Add arrows
-arrows(
-  x0 = 0, y0 = 0,
-  x1 = trait_loadings_scaled[, 1],
-  y1 = trait_loadings_scaled[, 2],
-  length = 0.1, col = "darkgray", lwd = 1.5
-)
-
-# Add trait labels at end of arrows
-text(
-  x = trait_loadings_scaled[, 1],
-  y = trait_loadings_scaled[, 2],
-  labels = rownames(trait_loadings),
-  col = "black",
-  cex = 0.9,
-  pos = 4
-)
+# FIGURES 27-Nov: exploratory plots, not in the paper (base-R CDA scatter)
+if (SHOW_EXPLORATORY) {
+  # TEST FOR PUB
+  while (dev.cur() > 1) dev.off()
+  
+  # Extract scores and manually add the Site info
+  # Extract the model frame used in MANOVA
+  model_data <- model.frame(manova_model)
+  
+  # Add Site to the CDA scores
+  scores <- cda$scores
+  scores$Site <- model_data$Site  # This will match row-for-row
+  scores$Site <- as.factor(scores$Site)
+  
+  
+  # Now safely get the levels
+  site_levels <- levels(scores$Site)
+  n_sites <- length(site_levels)
+  
+  # Colors and symbols
+  colors <- 1:n_sites
+  pch_vals <- 1:n_sites
+  
+  # Extract eigenvalues and compute proportion of variance
+  eig_vals <- cda$eigenvalues
+  var_explained <- eig_vals / sum(eig_vals) * 100
+  
+  # Round for display
+  can1_percent <- round(var_explained[1], 1)
+  can2_percent <- round(var_explained[2], 1)
+  
+  xlab <- paste0("Can1 (", can1_percent, "%)")
+  ylab <- paste0("Can2 (", can2_percent, "%)")
+  
+  
+  
+  # FIX 22-Oct: title() was called before plot() existed; labels now passed to plot() below
+  plot(
+    scores$Can1, scores$Can2,
+    col = colors[scores$Site],
+    pch = pch_vals[scores$Site],
+    xlab = xlab,  # FIX 22-Oct: was hard-coded "Can1 (74.2%)" from an older run
+    ylab = ylab,  # FIX 22-Oct: was hard-coded "Can2 (12.6%)"
+    main = "CDA Trait Differences Across Sites"
+  )
+  
+  # Legend
+  legend("topright",
+         legend = site_levels,
+         col = colors,
+         pch = pch_vals,
+         title = "Site",
+         cex = 0.8)
+  
+  # Extract trait loadings for the first two canonical dimensions
+  trait_loadings <- cda$structure[, 1:2]
+  # Scale loadings for visualization
+  arrow_scale <- 5  # Adjust as needed
+  trait_loadings_scaled <- trait_loadings * arrow_scale
+  # Add arrows
+  arrows(
+    x0 = 0, y0 = 0,
+    x1 = trait_loadings_scaled[, 1],
+    y1 = trait_loadings_scaled[, 2],
+    length = 0.1, col = "darkgray", lwd = 1.5
+  )
+  
+  # Add trait labels at end of arrows
+  text(
+    x = trait_loadings_scaled[, 1],
+    y = trait_loadings_scaled[, 2],
+    labels = rownames(trait_loadings),
+    col = "black",
+    cex = 0.9,
+    pos = 4
+  )
+}  # end exploratory block
 
 
 
@@ -1040,86 +1005,98 @@ write_xlsx(list(
   n_by_site = as.data.frame(table(model.frame(manova_model)$Site))),
   path = "Supplementary_CDA.xlsx")
 
-# Open JPEG device FIG FOR PUB
-jpeg("Figure_5_CDA_Traits_Sites.jpg", width = 10, height = 5, units = "in", res = 300)
+# Figure 5: CDA by site (FIGURES 27-Nov) ---------------------------------------
+# Points coloured by the period of their site; arrows = structure correlations;
+# site labels at the site means. Axis percentages are computed from this run.
+site_period <- maize_data %>% distinct(Site = as.character(Site), Period)
+cda_scores <- cda$scores %>%
+  mutate(Site = as.character(Site)) %>%
+  left_join(site_period, by = "Site") %>%
+  mutate(Site = factor(Site, levels = site_levels),
+         Period = factor(Period, levels = period_levels))
+cda_means <- cda_scores %>% group_by(Site, Period) %>%
+  summarise(Can1 = mean(Can1), Can2 = mean(Can2), n = n(), .groups = "drop")
+cda_load <- data.frame(Trait = fig_trait_labels[rownames(cda$structure)],
+                       Can1 = cda$structure[, 1], Can2 = cda$structure[, 2])
+k5 <- 0.8 * max(abs(c(cda_scores$Can1, cda_scores$Can2))) / max(abs(as.matrix(cda_load[, 2:3])))
 
+fig5 <- ggplot(cda_scores, aes(Can1, Can2)) +
+  geom_hline(yintercept = 0, colour = "grey80") + geom_vline(xintercept = 0, colour = "grey80") +
+  geom_point(aes(colour = Period), alpha = 0.45, size = 1.2) +
+  geom_segment(data = cda_load, aes(x = 0, y = 0, xend = Can1 * k5, yend = Can2 * k5),
+               arrow = arrow(length = unit(0.15, "cm")), colour = "grey30") +
+  geom_text_repel(data = cda_load, aes(x = Can1 * k5, y = Can2 * k5, label = Trait),
+                  size = 3, colour = "grey20", min.segment.length = Inf) +
+  geom_point(data = cda_means, aes(fill = Period), shape = 21, size = 3.5, colour = "black") +
+  geom_label_repel(data = cda_means, aes(label = Site), size = 3, label.size = 0,
+                   fill = alpha("white", 0.7), min.segment.length = 0) +
+  scale_colour_manual(values = period_cols, drop = FALSE) +
+  scale_fill_manual(values = period_cols, guide = "none") +
+  labs(x = paste0("Can1 (", round(cda_pct[1], 1), "%)"),
+       y = paste0("Can2 (", round(cda_pct[2], 1), "%)"), colour = "Period") +
+  coord_equal() +
+  theme_maize
+print(fig5)
+save_fig(fig5, "Figure5_CDA_Traits_Sites.png", height = 5.5)
 
-# Plot canonical variates with custom axis limits WORKS
-plot(cda,
-     main = "CDA for Traits Across Sites",
-     cex = 0.3        # REVISION 22-Oct: fixed xlim/ylim removed so no points are cut off
-)
-
-
-# Add legend 
-legend("topright",  # REVISION 22-Oct: was fixed coordinates (x = 21, y = 8)
-       legend = levels(maize_data_no_outlier$Site),
-       pch = 1:length(levels(maize_data_no_outlier$Site)),
-       col = 1:length(levels(maize_data_no_outlier$Site)),
-       title = "Site", 
-       cex = 0.7, 
-       bty = "n")
-
-# Close device if saving
-dev.off()
-
-# TRY WITHOUT WEIGHT BC Not Stat Sig 
-
-# Fit MANOVA model with all traits
-maize_data_no_outlier <- maize_data  # REVISION 22-Oct: no positional exclusion
-
-
-manova_model <- manova(cbind(
-  Length_mm,
-  Diameter_mm,
-  Cupule_number,
-  `Mean_Cupule_Width(mm)`,
-  `Mean_cupule_height(mm)`,
-  Mean_kernel_row
-) ~ Site, data = maize_data_no_outlier)
-
-# Canonical Discriminant Analysis
-cda <- candisc(manova_model)
-
-# View canonical scores (for plotting, etc.)
-head(cda$scores)
-# summary(scores$Can2)  # REVISION 22-Oct: 'scores' not yet defined here
-
-# Where is the M10 outlier?
-#outlier_row <- scores[which.min(scores$Can2), ]
-#print(outlier_row)
-graphics.off()   # close every open graphics device
-getwd()   
-
-scores <- cda$scores
-
-scores <- cda$scores
-plot(scores$Can1, scores$Can2, col = scores$Site,
-     pch = as.numeric(scores$Site),
-     xlab = "Can1", ylab = "Can2", main = "CDA Scores by Site")
-
-# Set legend as factor
-maize_data_no_outlier$Site <- factor(maize_data_no_outlier$Site)
-
-# Plot canonical variates with custom axis limits
-plot(cda,
-     main = "CDA for Significant Traits Across Sites (No Weight)",
-     xlim = c(-8, 14),
-     ylim = c(-8, 8),
-     cex = 5.0  # Increase this for larger point symbols
-)
-
-# Add legend
-legend(
-  "bottomright",
-  legend = levels(maize_data_no_outlier$Site),
-  pch = 1:length(levels(maize_data_no_outlier$Site)),
-  col = 1:length(levels(maize_data_no_outlier$Site)),
-  title = "Site", 
-  cex = 0.6, 
-  bty = "n"
-)
-
+# FIGURES 27-Nov: exploratory plots, not in the paper (CDA without weight)
+if (SHOW_EXPLORATORY) {
+  # TRY WITHOUT WEIGHT BC Not Stat Sig 
+  
+  # Fit MANOVA model with all traits
+  maize_data_no_outlier <- maize_data  # REVISION 22-Oct: no positional exclusion
+  
+  
+  manova_model <- manova(cbind(
+    Length_mm,
+    Diameter_mm,
+    Cupule_number,
+    `Mean_Cupule_Width(mm)`,
+    `Mean_cupule_height(mm)`,
+    Mean_kernel_row
+  ) ~ Site, data = maize_data_no_outlier)
+  
+  # Canonical Discriminant Analysis
+  cda <- candisc(manova_model)
+  
+  # View canonical scores (for plotting, etc.)
+  head(cda$scores)
+  # summary(scores$Can2)  # REVISION 22-Oct: 'scores' not yet defined here
+  
+  # Where is the M10 outlier?
+  #outlier_row <- scores[which.min(scores$Can2), ]
+  #print(outlier_row)
+  
+  scores <- cda$scores
+  
+  scores <- cda$scores
+  plot(scores$Can1, scores$Can2, col = scores$Site,
+       pch = as.numeric(scores$Site),
+       xlab = "Can1", ylab = "Can2", main = "CDA Scores by Site")
+  
+  # Set legend as factor
+  maize_data_no_outlier$Site <- factor(maize_data_no_outlier$Site)
+  
+  # Plot canonical variates with custom axis limits
+  plot(cda,
+       main = "CDA for Significant Traits Across Sites (No Weight)",
+       xlim = c(-8, 14),
+       ylim = c(-8, 8),
+       cex = 5.0  # Increase this for larger point symbols
+  )
+  
+  # Add legend
+  legend(
+    "bottomright",
+    legend = levels(maize_data_no_outlier$Site),
+    pch = 1:length(levels(maize_data_no_outlier$Site)),
+    col = 1:length(levels(maize_data_no_outlier$Site)),
+    title = "Site", 
+    cex = 0.6, 
+    bty = "n"
+  )
+  
+}  # end exploratory block
 
 
 
@@ -1194,45 +1171,48 @@ maize_data$Time_Period <- case_when(
   TRUE ~ "MH"                                              # Middle Horizon
 )
 
-# Boxplot for Length with Time Period as fill
-ggplot(maize_data, aes(x = Site, y = Length_mm, fill = Time_Period)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.2, alpha = 0.4) +
-  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Distribution of Cob Length by Site and Time Period",
-       x = "Site",
-       y = "Length (mm)",
-       fill = "Time Period")
-
-
-# Boxplot for Weight with Time Period as fill
-ggplot(maize_data, aes(x = Site, y = Total_Wt_g, fill = Time_Period)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.2, alpha = 0.4) +
-  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Distribution of Cob Weight by Site and Time Period",
-       x = "Site",
-       y = "Weight (g)",
-       fill = "Time Period")
-
-
-
-# Boxplot for Diameter_mm with Time Period as fill
-ggplot(maize_data, aes(x = Site, y = Diameter_mm, fill = Time_Period)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.2, alpha = 0.4) +
-  scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Distribution of Cob Diameter by Site and Time Period",
-       x = "Site",
-       y = "Diameter (mm)",
-       fill = "Time Period")
-
+# FIGURES 27-Nov: exploratory plots, not in the paper (boxplots by site and period)
+if (SHOW_EXPLORATORY) {
+  # Boxplot for Length with Time Period as fill
+  ggplot(maize_data, aes(x = Site, y = Length_mm, fill = Time_Period)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(width = 0.2, alpha = 0.4) +
+    scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Distribution of Cob Length by Site and Time Period",
+         x = "Site",
+         y = "Length (mm)",
+         fill = "Time Period")
+  
+  
+  # Boxplot for Weight with Time Period as fill
+  ggplot(maize_data, aes(x = Site, y = Total_Wt_g, fill = Time_Period)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(width = 0.2, alpha = 0.4) +
+    scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Distribution of Cob Weight by Site and Time Period",
+         x = "Site",
+         y = "Weight (g)",
+         fill = "Time Period")
+  
+  
+  
+  # Boxplot for Diameter_mm with Time Period as fill
+  ggplot(maize_data, aes(x = Site, y = Diameter_mm, fill = Time_Period)) +
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(width = 0.2, alpha = 0.4) +
+    scale_fill_manual(values = c("LF" = "lightblue", "LF/MH" = "orange", "LIP" = "green", "MH" = "purple")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Distribution of Cob Diameter by Site and Time Period",
+         x = "Site",
+         y = "Diameter (mm)",
+         fill = "Time Period")
+  
+}  # end exploratory block
 
 
 
@@ -2127,24 +2107,32 @@ morpho_pca <- prcomp(dplyr::select(morpho_wide, -Site), scale. = TRUE)
 # Step 3: View PCA summary
 summary(morpho_pca)
 
-# REVISION 22-Oct: Figure 3 = this PCA (7 traits, scaled, complete cases), not the transposed PCA
+# Figure 3: PCA biplot (FIGURES 27-Nov) ----------------------------------------
+# Same PCA as before (7 traits, scaled, complete cases). PC1 is multiplied by -1 FOR THE
+# FIGURE ONLY, so larger cobs plot to the right; morpho_pca itself is unchanged.
 pca_var <- round(summary(morpho_pca)$importance[2, 1:2] * 100, 1)
-pca_load <- as.data.frame(morpho_pca$rotation[, 1:2]); pca_load$Trait <- rownames(pca_load)
-pca_scores_fig <- as.data.frame(morpho_pca$x[, 1:2])
+pca_scores_fig <- data.frame(PC1 = -morpho_pca$x[, 1], PC2 = morpho_pca$x[, 2])
 pca_scores_fig$Period <- factor(maize_data$Period[complete.cases(maize_data[, c("Length_mm","Diameter_mm","Cupule_number","Mean_Cupule_Width(mm)","Mean_cupule_height(mm)","Mean_kernel_row","Total_Wt_g")])],
-                                levels = c("LF", "LF/MH", "MH", "LIP"))
-arrow_scale <- 3
-fig3 <- ggplot(pca_scores_fig, aes(PC1, PC2, colour = Period)) +
-  geom_point(alpha = 0.6, size = 1.8) +
-  geom_segment(data = pca_load, aes(x = 0, y = 0, xend = PC1 * arrow_scale, yend = PC2 * arrow_scale),
-               inherit.aes = FALSE, arrow = arrow(length = unit(0.15, "cm"))) +
-  geom_text(data = pca_load, aes(x = PC1 * arrow_scale * 1.12, y = PC2 * arrow_scale * 1.12, label = Trait),
-            inherit.aes = FALSE, size = 3) +
-  labs(x = paste0("PC1 (", pca_var[1], "%)"), y = paste0("PC2 (", pca_var[2], "%)"),
-       title = paste0("PCA of seven cob traits (n = ", nrow(pca_scores_fig), ")")) +
-  theme_minimal()
+                                levels = period_levels)
+pca_load <- data.frame(Trait = c(Length = "Length (mm)", Diameter = "Diameter (mm)", Weight = "Weight (g)",
+                                 CupuleNumber = "Cupule number", KernelRows = "Kernel row number",
+                                 CupuleWidth = "Cupule width (mm)", CupuleHeight = "Cupule height (mm)")[rownames(morpho_pca$rotation)],
+                       PC1 = -morpho_pca$rotation[, 1], PC2 = morpho_pca$rotation[, 2])
+k3 <- 0.8 * max(abs(as.matrix(pca_scores_fig[, 1:2]))) / max(abs(as.matrix(pca_load[, 2:3])))
+
+fig3 <- ggplot(pca_scores_fig, aes(PC1, PC2)) +
+  geom_hline(yintercept = 0, colour = "grey80") + geom_vline(xintercept = 0, colour = "grey80") +
+  geom_point(aes(colour = Period), alpha = 0.6, size = 1.4) +
+  geom_segment(data = pca_load, aes(x = 0, y = 0, xend = PC1 * k3, yend = PC2 * k3),
+               arrow = arrow(length = unit(0.15, "cm")), colour = "grey30") +
+  geom_text_repel(data = pca_load, aes(x = PC1 * k3, y = PC2 * k3, label = Trait),
+                  size = 3, colour = "grey20", min.segment.length = Inf) +
+  scale_colour_manual(values = period_cols, drop = FALSE) +
+  labs(x = paste0("PC1 (", pca_var[1], "%)"), y = paste0("PC2 (", pca_var[2], "%)"), colour = "Period") +
+  coord_equal() +
+  theme_maize
 print(fig3)
-ggsave("Figure3_PCA_biplot.png", fig3, width = 7, height = 5.5, dpi = 300)
+save_fig(fig3, "Figure3_PCA_biplot.png", height = 5.5)
 write_xlsx(list(Variance = data.frame(PC = colnames(morpho_pca$x),
                                       Proportion = summary(morpho_pca)$importance[2, ],
                                       Cumulative = summary(morpho_pca)$importance[3, ]),
@@ -2155,14 +2143,17 @@ write_xlsx(list(Variance = data.frame(PC = colnames(morpho_pca$x),
 scores <- as.data.frame(morpho_pca$x)
 scores$Site <- morpho_wide$Site
 
-# Step 5 (optional): Plot the first two principal components
-
-ggplot(scores, aes(x = PC1, y = PC2, color = Site)) +
-  geom_point(size = 3, alpha = 0.8) +
-  theme_minimal() +
-  labs(title = "PCA of Ancient Maize Cob Morphology by Site",
-       x = paste0("PC1 (", round(summary(morpho_pca)$importance[2,1]*100, 1), "%)"),
-       y = paste0("PC2 (", round(summary(morpho_pca)$importance[2,2]*100, 1), "%)"))
+# FIGURES 27-Nov: exploratory plots, not in the paper (PCA coloured by site)
+if (SHOW_EXPLORATORY) {
+  # Step 5 (optional): Plot the first two principal components
+  
+  ggplot(scores, aes(x = PC1, y = PC2, color = Site)) +
+    geom_point(size = 3, alpha = 0.8) +
+    theme_minimal() +
+    labs(title = "PCA of Ancient Maize Cob Morphology by Site",
+         x = paste0("PC1 (", round(summary(morpho_pca)$importance[2,1]*100, 1), "%)"),
+         y = paste0("PC2 (", round(summary(morpho_pca)$importance[2,2]*100, 1), "%)"))
+}  # end exploratory block
 
 
 
@@ -2758,18 +2749,20 @@ write_xlsx(list(Sample_sizes = n_accounting,
                   "eta_squared from the standard one-way ANOVA of the same data."))),
            path = "Supplementary_Period_Comparisons.xlsx")
 
-# Figure 4 (replaces regression panels): traits by period, unordered groups
+# Figure 4: traits by period (FIGURES 27-Nov) ----------------------------------
 fig4 <- cc_data %>%
   dplyr::select(Period, all_of(traits)) %>%
   pivot_longer(-Period, names_to = "Trait", values_to = "Value") %>%
-  ggplot(aes(Period, Value)) +
-  geom_boxplot(outlier.shape = NA, fill = "grey90") +
-  geom_jitter(width = 0.15, alpha = 0.35, size = 0.8) +
-  facet_wrap(~ Trait, scales = "free_y") +
-  labs(x = NULL, y = NULL, title = paste0("Cob traits by period (n = ", nrow(cc_data), ")")) +
-  theme_bw()
+  mutate(Trait = factor(fig_trait_labels[Trait], levels = fig_trait_order)) %>%
+  ggplot(aes(Period, Value, fill = Period)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.3, size = 0.7) +
+  scale_fill_manual(values = period_cols, guide = "none") +
+  facet_wrap(~ Trait, scales = "free_y", ncol = 4) +
+  labs(x = NULL, y = NULL) +
+  theme_maize
 print(fig4)
-ggsave("Figure4_traits_by_period.png", fig4, width = 9, height = 7, dpi = 300)
+save_fig(fig4, "Figure4_traits_by_period.png", height = 5)
 
 ## Update Table 2 for summary stats
 cc <- maize_data %>%
