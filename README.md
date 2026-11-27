@@ -14,7 +14,7 @@ The study compares cob traits of 344 archaeological maize cobs from nine sites i
 | `Supplementary/` | Supplementary tables and images cited in the paper |
 | `Figures/` | Final figures as they appear in the paper |
 | `AMS/` | Lab report, OxCal calibration and models for the 20 radiocarbon dates |
-| `Visuals/Exploratory_archive/` | Earlier exploratory plots, kept for transparency. **Not used in the paper**; several show analyses that were replaced during revision |
+| `Visuals/` | Earlier exploratory plots, kept for transparency. **Not used in the paper**; several show analyses that were replaced during revision |
 
 Each folder has its own README.
 
