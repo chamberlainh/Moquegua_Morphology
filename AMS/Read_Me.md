@@ -9,6 +9,6 @@ Lab data and OxCal files for the 20 AMS radiocarbon dates (UC Irvine KCCAMS).
 | `Revision_Supplementary_Moquega_Maize_All.log` / `.txt` / `.png` | OxCal output: calibrated ranges for all 20 dates (source of Table 3) and plot |
 | `OxCal_Code_All.docx` | The same calibration code as a Word file |
 | `Omo.log`, `Omo.txt`, `Omo.js`, `OxCal_Omo.docx`, `Omo.docx` | Bayesian phase model for the two Omo (M10) dates. With two dates, the model's start and end boundaries are poorly constrained |
-| `RMM43_Maize.log`, `RMM43_Maize.txt`, `RMM43_Maize.js`, `OxCal_RMM43.docx` | Bayesian phase model for the ten Rio Muerto (M43) dates [note: run with the original sample codes; to be rerun with the specimen IDs] |
+| `RMM43_Maize.log`, `RMM43_Maize.txt`, `RMM43_Maize.js`, `OxCal_RMM43.docx` | Bayesian phase model for the ten Rio Muerto (M43) dates |
 
 The calibrated dates joined to specimen IDs are in `Morphological_Analysis/Revision_Supplementary_AMS_full.csv`.
