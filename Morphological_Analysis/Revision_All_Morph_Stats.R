@@ -698,7 +698,7 @@ ggplot(filter(mh_long, Trait %in% cob_traits), aes(x = Site, y = Value, fill = S
   )
 
 #Save
-ggsave("Cob_Dimensions_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
+ggsave("Figure7_Cob_Dimensions_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 ggplot(filter(mh_long, Trait %in% cupule_traits), aes(x = Site, y = Value, fill = Site)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.7) +
@@ -723,7 +723,7 @@ ggplot(filter(mh_long, Trait %in% cupule_traits), aes(x = Site, y = Value, fill 
   )
 
 #Save
-ggsave("Cupule_Characteristics_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
+ggsave("Figure8_Cupule_Characteristics_MH.jpeg", dpi = 300, width = 10, height = 7, units = "in")
 
 
 
@@ -1041,7 +1041,7 @@ write_xlsx(list(
   path = "Supplementary_CDA.xlsx")
 
 # Open JPEG device FIG FOR PUB
-jpeg("CDA_Traits_Sites.jpg", width = 10, height = 5, units = "in", res = 300)
+jpeg("Figure_5_CDA_Traits_Sites.jpg", width = 10, height = 5, units = "in", res = 300)
 
 
 # Plot canonical variates with custom axis limits WORKS
@@ -1088,6 +1088,8 @@ head(cda$scores)
 # Where is the M10 outlier?
 #outlier_row <- scores[which.min(scores$Can2), ]
 #print(outlier_row)
+graphics.off()   # close every open graphics device
+getwd()   
 
 scores <- cda$scores
 
